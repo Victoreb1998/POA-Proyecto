@@ -19,4 +19,8 @@
 6. Hacemos click en el icono del documento con un signo +
 7. En argumentos colocamos la ruta relativa del fichero configuración del escneario "configs/scenario.yaml"
 
-
+## Configurando el proyecto maven desde linea de comando
+```
+cd PoA-plantilla-practica
+mvn eclipse:eclipse
+```
