@@ -24,3 +24,5 @@
 cd PoA-plantilla-practica
 mvn eclipse:eclipse
 ```
+Cargar el proyecto en Eclipse como un General > Proyecto existente en workspace
+
