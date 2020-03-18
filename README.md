@@ -17,6 +17,6 @@
 4. Boton derecho > Run As > Run Configuration
 5. Seleccionamos en la columna de la Izquierda > Java Application
 6. Hacemos click en el icono del documento con un signo +
-7. En argumentos colocamos la ruta relativa del fichero configuración del escneario "config/scenario.yaml"
+7. En argumentos colocamos la ruta relativa del fichero configuración del escneario "configs/scenario.yaml"
 
 
