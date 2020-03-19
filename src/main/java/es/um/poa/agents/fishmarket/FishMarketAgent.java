@@ -7,23 +7,60 @@ import java.io.InputStream;
 import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
+import es.um.poa.protocols.addbuyer.AddBuyerProtocolResponder;
+import jade.core.AID;
+import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class FishMarketAgent extends POAAgent{
 	
 	private static final long serialVersionUID = 1L;
 
+	public boolean performActionAddBuyerProtocol(AID sender) {
+		
+		// Hacer las Acciones correspondientes.
+		return true;
+	}
+	
+	public boolean checkActionAddBuyerProtocol(AID sender) {
+		
+		// Hacer las Acciones correspondientes.
+		return true;
+	}
+	
+	
+	
 	public void setup() {
 		super.setup();
 		Object[] args = getArguments();
-		if (args != null && args.length == 1) {
-			String configFile = (String) args[0];
-			FishMarketAgentConfig config = initAgentFromConfigFile(configFile);
+		String configFile = (String) args[0];
+		FishMarketAgentConfig config = initAgentFromConfigFile(configFile);
+		
+		if (args != null && args.length == 1 && config != null) {
 			
-			if(config != null) {
-				
-			}
+			// Crear los comportamientos correspondientes
+
+	        MessageTemplate messageTemplate = null;
+	        		/* Completa con el protocolo FIPA correspondiente y el mensajes correspondiente
+	        		MessageTemplate.and(
+	     		  	//MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.<>),
+	     		  	//MessageTemplate.MatchPerformative(ACLMessage.<>) 
+	     		  	);
+	        		*/
+			
+			
+			 MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(
+					 messageTemplate, MessageTemplate.MatchConversationId("AddBuyerProtocol"));
+		      
+			 // Añadimos el protocolo de adicion del comprador.
+			 addBehaviour(new AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
+			 this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
+			
+			
+			
 		} else {
-			this.getLogger().info("ERROR", "Requiere fichero de cofiguración.");
+			this.getLogger().info("ERROR", "Requiere fichero de configuración.");
 			doDelete();
 		}
 	}
