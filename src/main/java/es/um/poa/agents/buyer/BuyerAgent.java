@@ -15,7 +15,7 @@ public class BuyerAgent extends POAAgent {
 
 	public void setup() {
 		super.setup();
-		
+		//hola
 		Object[] args = getArguments();
 		if (args != null && args.length == 1) {
 			String configFile = (String) args[0];
