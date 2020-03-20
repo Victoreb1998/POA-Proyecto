@@ -9,11 +9,15 @@ import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishBuyerGui;
+import es.um.poa.protocols.addbuyer.AddBuyerProtocolInitiator;
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
@@ -31,7 +35,6 @@ public class BuyerAgent extends POAAgent {
 
 	public void setup() {
 		super.setup();
-		// hola
 		Object[] args = getArguments();
 		if (args != null && args.length == 1) {
 			String configFile = (String) args[0];
@@ -41,27 +44,33 @@ public class BuyerAgent extends POAAgent {
 				System.out.println("Hola! Agente-comprador: " + this.getName() + " está listo");
 				targetFishName = new LinkedList<String>();
 				// Creo y muestro la GUI
-				myGui = new FishBuyerGui(this);
-				myGui.showGui();
-
-				DFAgentDescription template = new DFAgentDescription();
-				ServiceDescription sd = new ServiceDescription();
-				sd.setType("lonja");
-				template.addServices(sd);
-				try {
-					DFAgentDescription[] result = DFService.search(this, template);
-					LonjaAgent = result[0].getName();
-
-				} catch (FIPAException fe) {
-					fe.printStackTrace();
-				}
-
+				/*myGui = new FishBuyerGui(this);
+				myGui.showGui();*/
+				
 				SequentialBehaviour seq = new SequentialBehaviour();
 				seq.addSubBehaviour(new OneShotBehaviour() {
+					
+					private static final long serialVersionUID = 1L;
 
-					/**
-					 * 
-					 */
+					@Override
+					public void action() {
+						DFAgentDescription template = new DFAgentDescription();
+						ServiceDescription sd = new ServiceDescription();
+						sd.setType("lonja");
+						template.addServices(sd);
+						try {
+							DFAgentDescription[] result = DFService.search(myAgent, template);
+							LonjaAgent = result[0].getName();
+
+						} catch (FIPAException fe) {
+							fe.printStackTrace();
+						}
+
+					}
+				});
+				seq.addSubBehaviour(new OneShotBehaviour() {
+
+					
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -69,20 +78,23 @@ public class BuyerAgent extends POAAgent {
 						// le enviamos un mensaje de tipo subscribe para que la lonja
 						// si cree que el comprador es valido se comprometa a informar
 						// cuando haya un pescado disponible
-						ACLMessage identificacion = new ACLMessage(ACLMessage.SUBSCRIBE);
+						ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
+						identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						identificacion.setConversationId("AddBuyerProtocol");
 						identificacion.addReceiver(LonjaAgent);
 						// le envia su nombre
 						identificacion.setContent(getName());
 						identificacion.setReplyWith("subscribe" + System.currentTimeMillis());
 						myAgent.send(identificacion);
+						//no se si habria que utilizar esto
+						
 
 					}
 				});
-				seq.addSubBehaviour(new OneShotBehaviour() {
+				addBehaviour(seq);
+				/*seq.addSubBehaviour(new OneShotBehaviour() {
 
-					/**
-					 * 
-					 */
+					
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
@@ -110,10 +122,7 @@ public class BuyerAgent extends POAAgent {
 							}
 						}
 					}
-				});
-
-				addBehaviour(seq);
-
+				});*/
 			} else {
 				doDelete();
 			}

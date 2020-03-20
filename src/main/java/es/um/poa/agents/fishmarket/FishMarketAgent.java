@@ -14,6 +14,7 @@ import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
@@ -30,13 +31,14 @@ public class FishMarketAgent extends POAAgent {
 	public boolean performActionAddBuyerProtocol(AID sender) {
 
 		// Hacer las Acciones correspondientes.
+		compradoresAID.put(sender, new Double(0));
 		return true;
 	}
 
 	public boolean checkActionAddBuyerProtocol(AID sender) {
 
 		// Hacer las Acciones correspondientes.
-		return true;
+		return !compradoresAID.containsKey(sender);
 	}
 
 	public void setup() {
@@ -48,23 +50,6 @@ public class FishMarketAgent extends POAAgent {
 		if (args != null && args.length == 1) {
 
 			if (config != null) {
-
-				// Crear los comportamientos correspondientes
-				/*
-				 * MessageTemplate messageTemplate = null; // Completa con el protocolo FIPA
-				 * correspondiente y el mensajes correspondiente //MessageTemplate.and(
-				 * //MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.<>),
-				 * //MessageTemplate.MatchPerformative(ACLMessage.<>) //);
-				 * 
-				 * 
-				 * 
-				 * MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(
-				 * messageTemplate, MessageTemplate.MatchConversationId("AddBuyerProtocol"));
-				 * 
-				 * // AÃ±adimos el protocolo de adicion del comprador. addBehaviour(new
-				 * AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
-				 * this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
-				 */
 				compradoresAID = new HashMap<AID, Double>();
 				vendedoresAID = new LinkedList<AID>();
 				// Registrar el servicio en las paginas amarillas
@@ -81,10 +66,33 @@ public class FishMarketAgent extends POAAgent {
 				} catch (FIPAException fe) {
 					fe.printStackTrace();
 				}
-				// TODO añadir comportamientos
-				addBehaviour(new DescubrirComprador());
-				addBehaviour(new ComprobarComprador());
-				addBehaviour(new DescubirVendedor());
+				// Crear los comportamientos correspondientes
+				/*
+				 * MessageTemplate messageTemplate = null; // Completa con el protocolo FIPA
+				 * correspondiente y el mensajes correspondiente //MessageTemplate.and(
+				 * //MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.<>),
+				 * //MessageTemplate.MatchPerformative(ACLMessage.<>) //);
+				 * 
+				 * 
+				 * 
+				 * MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(
+				 * messageTemplate, MessageTemplate.MatchConversationId("AddBuyerProtocol"));
+				 * 
+				 * // AÃ±adimos el protocolo de adicion del comprador. addBehaviour(new
+				 * AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
+				 * this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
+				 */
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+						MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+				MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
+						MessageTemplate.MatchConversationId("AddBuyerProtocol"));
+				addBehaviour(new AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
+				this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
+		
+			
+				/*addBehaviour(new ComprobarComprador());
+				addBehaviour(new DescubirVendedor());*/
 
 			} else {
 				doDelete();
@@ -109,17 +117,13 @@ public class FishMarketAgent extends POAAgent {
 		return config;
 	}
 
-	private class DescubrirComprador extends CyclicBehaviour {
+	/*private class DescubrirComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
-			/*
-			 * Recibe un mensaje de ACL que coincide con una plantilla determinada. Este
-			 * método no bloquea y devuelve el primer mensaje coincidente en la cola, si lo
-			 * hay.
-			 */
+			
+			
 			ACLMessage msg = myAgent.receive(mt);
 
 			if (msg != null) {
@@ -136,7 +140,7 @@ public class FishMarketAgent extends POAAgent {
 
 		}
 
-	}
+	}*/
 
 	private class ComprobarComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
