@@ -9,8 +9,6 @@ import org.yaml.snakeyaml.Yaml;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.protocols.addbuyer.AddBuyerProtocolResponder;
 import jade.core.AID;
-import jade.domain.FIPANames;
-import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 public class FishMarketAgent extends POAAgent{
@@ -37,17 +35,20 @@ public class FishMarketAgent extends POAAgent{
 		String configFile = (String) args[0];
 		FishMarketAgentConfig config = initAgentFromConfigFile(configFile);
 		
-		if (args != null && args.length == 1 && config != null) {
+		if (args != null && args.length == 1) {
 			
+			if(config != null) {
+				
+				
 			// Crear los comportamientos correspondientes
-
+/*
 	        MessageTemplate messageTemplate = null;
-	        		/* Completa con el protocolo FIPA correspondiente y el mensajes correspondiente
-	        		MessageTemplate.and(
+	        		// Completa con el protocolo FIPA correspondiente y el mensajes correspondiente 
+	        		//MessageTemplate.and(
 	     		  	//MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.<>),
 	     		  	//MessageTemplate.MatchPerformative(ACLMessage.<>) 
-	     		  	);
-	        		*/
+	     		  	//);
+	        		
 			
 			
 			 MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(
@@ -56,9 +57,16 @@ public class FishMarketAgent extends POAAgent{
 			 // Añadimos el protocolo de adicion del comprador.
 			 addBehaviour(new AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
 			 this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
-			
-			
-			
+*/		
+				
+				
+				
+				
+				
+				
+			} else {
+				doDelete();
+			}
 		} else {
 			this.getLogger().info("ERROR", "Requiere fichero de configuración.");
 			doDelete();
