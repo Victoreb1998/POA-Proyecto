@@ -4,7 +4,6 @@ import es.um.poa.utils.AgentLoggerWrapper;
 import jade.core.Agent;
 
 public class POAAgent extends Agent {
-
 	private static final long serialVersionUID = 1L;
 	private AgentLoggerWrapper logger;
 	
@@ -15,7 +14,7 @@ public class POAAgent extends Agent {
 	public AgentLoggerWrapper getLogger() {
 		return this.logger;
 	}
-	
+	//metodo para eliminar 
 	public void takeDown() {
 		super.takeDown();
 		this.logger.close();
