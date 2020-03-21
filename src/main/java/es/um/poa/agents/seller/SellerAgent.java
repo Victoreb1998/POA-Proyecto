@@ -15,6 +15,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -44,12 +45,13 @@ public class SellerAgent extends POAAgent {
 
 				// Registrar el servicio de venta de libros en las paginas amarillas
 				SequentialBehaviour seq = new SequentialBehaviour();
-				seq.addSubBehaviour(new OneShotBehaviour() {
-					
+				//No podemos dejar que el vendedor busque a la lonja antes de que esta este registrada
+				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
+
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void action() {
+					protected void handleElapsedTimeout() {
 						DFAgentDescription template = new DFAgentDescription();
 						ServiceDescription sd = new ServiceDescription();
 						sd.setType("lonja");

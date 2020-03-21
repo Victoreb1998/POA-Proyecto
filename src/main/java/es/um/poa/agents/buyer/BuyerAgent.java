@@ -48,12 +48,13 @@ public class BuyerAgent extends POAAgent {
 				myGui.showGui();*/
 				
 				SequentialBehaviour seq = new SequentialBehaviour();
-				seq.addSubBehaviour(new OneShotBehaviour() {
+				//No podemos dejar que el comprador busque a la lonja antes de que esta este registrada
+				seq.addSubBehaviour(new WakerBehaviour( this, 10000 ) {
 					
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void action() {
+					 protected void handleElapsedTimeout() {
 						DFAgentDescription template = new DFAgentDescription();
 						ServiceDescription sd = new ServiceDescription();
 						sd.setType("lonja");

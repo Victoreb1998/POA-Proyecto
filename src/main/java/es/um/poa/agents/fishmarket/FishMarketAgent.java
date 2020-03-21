@@ -29,7 +29,6 @@ public class FishMarketAgent extends POAAgent {
 	private LinkedList<AID> vendedoresAID;
 
 	public boolean performActionAddBuyerProtocol(AID sender) {
-
 		// Hacer las Acciones correspondientes.
 		compradoresAID.put(sender, new Double(0));
 		return true;
