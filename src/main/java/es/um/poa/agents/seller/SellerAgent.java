@@ -18,6 +18,7 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
@@ -45,7 +46,8 @@ public class SellerAgent extends POAAgent {
 
 				// Registrar el servicio de venta de libros en las paginas amarillas
 				SequentialBehaviour seq = new SequentialBehaviour();
-				//No podemos dejar que el vendedor busque a la lonja antes de que esta este registrada
+				// No podemos dejar que el vendedor busque a la lonja antes de que esta este
+				// registrada
 				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
@@ -63,6 +65,27 @@ public class SellerAgent extends POAAgent {
 						} catch (FIPAException fe) {
 							fe.printStackTrace();
 						}
+
+					}
+				});
+				seq.addSubBehaviour(new OneShotBehaviour() {
+
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void action() {
+						// le enviamos un mensaje de tipo subscribe para que la lonja
+						// si cree que el comprador es valido se comprometa a informar
+						// cuando haya un pescado disponible
+						ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
+						identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						identificacion.setConversationId("AddSellerProtocol");
+						identificacion.addReceiver(LonjaAgent);
+						// le envia su nombre
+						identificacion.setContent(getName());
+						identificacion.setReplyWith("subscribe" + System.currentTimeMillis());
+						myAgent.send(identificacion);
+						// no se si habria que utilizar esto
 
 					}
 				});

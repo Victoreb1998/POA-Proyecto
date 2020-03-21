@@ -9,7 +9,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishBuyerGui;
-import es.um.poa.protocols.addbuyer.AddBuyerProtocolInitiator;
+import es.um.poa.protocols.AddBuyerProtocolInitiator;
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;

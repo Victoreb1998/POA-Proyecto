@@ -9,7 +9,8 @@ import java.util.LinkedList;
 import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
-import es.um.poa.protocols.addbuyer.AddBuyerProtocolResponder;
+import es.um.poa.protocols.AddBuyerProtocolResponder;
+import es.um.poa.protocols.AddSellerProtocolResponder;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -38,6 +39,16 @@ public class FishMarketAgent extends POAAgent {
 
 		// Hacer las Acciones correspondientes.
 		return !compradoresAID.containsKey(sender);
+	}
+	public boolean performActionAddSellerProtocol(AID sender) {
+		// Hacer las Acciones correspondientes.
+		return vendedoresAID.add(sender);
+	}
+
+	public boolean checkActionAddSellerProtocol(AID sender) {
+
+		// Hacer las Acciones correspondientes.
+		return !vendedoresAID.contains(sender);
 	}
 
 	public void setup() {
@@ -88,6 +99,14 @@ public class FishMarketAgent extends POAAgent {
 						MessageTemplate.MatchConversationId("AddBuyerProtocol"));
 				addBehaviour(new AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
 				this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
+				
+				MessageTemplate messageTemplate = MessageTemplate.and(
+						MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+						MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+				MessageTemplate templateAddSellerProtocol = MessageTemplate.and(messageTemplate,
+						MessageTemplate.MatchConversationId("AddSellerProtocol"));
+				addBehaviour(new AddSellerProtocolResponder(this,templateAddSellerProtocol));
+				this.getLogger().info("INFO", "AddSellerProtocol sucessfully added");
 		
 			
 				/*addBehaviour(new ComprobarComprador());

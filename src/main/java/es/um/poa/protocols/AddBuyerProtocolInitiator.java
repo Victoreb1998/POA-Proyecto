@@ -1,4 +1,4 @@
-package es.um.poa.protocols.addbuyer;
+package es.um.poa.protocols;
 
 import es.um.poa.agents.buyer.BuyerAgent;
 import jade.core.Agent;
