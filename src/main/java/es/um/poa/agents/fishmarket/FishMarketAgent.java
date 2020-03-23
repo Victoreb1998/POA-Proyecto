@@ -9,9 +9,6 @@ import java.util.LinkedList;
 import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
-import es.um.poa.protocols.AddBuyerProtocolResponder;
-import es.um.poa.protocols.AddSellerProtocolResponder;
-import es.um.poa.protocols.OpenBuyerCreditProtocolResponder;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -25,7 +22,7 @@ import jade.lang.acl.MessageTemplate;
 public class FishMarketAgent extends POAAgent {
 
 	private static final long serialVersionUID = 1L;
-	private double dineroMinimo = 3000;
+	private double dineroMinimo = 50;
 	// Lista con los AID de los compradores
 	private HashMap<AID, Double> compradoresAID;
 	private LinkedList<AID> vendedoresAID;
@@ -191,16 +188,16 @@ public class FishMarketAgent extends POAAgent {
 					"OpenBuyerCreditProtocol");
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
-						+ msg.getSender().getLocalName() + " [OpenCreditProtocol]" + "Credit:" + msg.getContent());
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
+						+ ": REQUEST to open a credit to a buyer received from " + msg.getSender().getLocalName());
 				ACLMessage reply = msg.createReply();
 				if (compradoresAID.containsKey(msg.getSender())) {
 
 					Double credito = Double.valueOf(msg.getContent());
 					if (credito >= dineroMinimo) {
 						compradoresAID.put(msg.getSender(), credito);
-						fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action failed for "
-								+ msg.getSender().getLocalName() + " [OpenCreditProtocol]");
+						fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
+								+ msg.getSender().getLocalName() + " [OpenCreditProtocol]" + "Credit:" + msg.getContent());
 						reply.setPerformative(ACLMessage.INFORM);
 					} else {
 						reply.setPerformative(ACLMessage.FAILURE);

@@ -11,10 +11,8 @@ import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishSellerGui;
 import es.um.poa.modelo.Precio;
 import jade.core.AID;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -22,7 +20,6 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 public class SellerAgent extends POAAgent {
 

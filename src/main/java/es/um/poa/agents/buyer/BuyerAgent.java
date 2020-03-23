@@ -69,13 +69,14 @@ public class BuyerAgent extends POAAgent {
 
 					}
 				});
+				//protocolo de inicio para registrar a un comprador
 				seq.addSubBehaviour(new OneShotBehaviour() {
 
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void action() {
-						// le enviamos un mensaje de tipo subscribe para que la lonja
+						// le enviamos un mensaje de tipo request para que la lonja
 						// si cree que el comprador es valido se comprometa a informar
 						// cuando haya un pescado disponible
 						ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
@@ -85,24 +86,23 @@ public class BuyerAgent extends POAAgent {
 						// le envia su nombre
 						identificacion.setContent(getName());
 						myAgent.send(identificacion);
-						// no se si habria que utilizar esto
 
 					}
 				});
+				//protocolo de inicio para abrir un credito, tiene que ser un waker behaviour pq tiene que suceder despues de 
+				//que se haya registrado el usuario, si no le ponemos aun que sea unas milesimas de tiempo de separacion recibira
+				//un mensaje nulo
 				seq.addSubBehaviour(new WakerBehaviour(this, 500) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					protected void handleElapsedTimeout() {
-						// le enviamos un mensaje de tipo subscribe para que la lonja
-						// si cree que el comprador es valido se comprometa a informar
-						// cuando haya un pescado disponible
+						//recibimos la respuesta
 						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
-							// si es un AGREE podemos deducir que si es un comprador
-							// valido
+							//si el comprador se ha podido registrar(INFORM) podrá abrir un credito
 							if (msg.getPerformative() == ACLMessage.INFORM) {
 								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
 								identificacion.addReceiver(LonjaAgent);
