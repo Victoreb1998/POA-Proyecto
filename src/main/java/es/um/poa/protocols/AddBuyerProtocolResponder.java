@@ -86,6 +86,7 @@ public class AddBuyerProtocolResponder extends AchieveREResponder
 
 			// Creamos y devolvemos el INFORM.
 			ACLMessage inform = request.createReply();
+			inform.setConversationId("OpenCreditProtocol");
 			inform.setPerformative(ACLMessage.INFORM);
 			return inform;
 		}

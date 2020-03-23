@@ -42,6 +42,7 @@ public class AddBuyerProtocolInitiator extends AchieveREInitiator{
 			throw e;
 		}
 	}
+	
 	/**
 	 * Maneja los mensajes inform recibidos.
 	 * Se llama al padre y se añaden ordenes para la depuración.

@@ -9,11 +9,9 @@ import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishBuyerGui;
-import es.um.poa.protocols.AddBuyerProtocolInitiator;
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -44,17 +42,19 @@ public class BuyerAgent extends POAAgent {
 				System.out.println("Hola! Agente-comprador: " + this.getName() + " está listo");
 				targetFishName = new LinkedList<String>();
 				// Creo y muestro la GUI
-				/*myGui = new FishBuyerGui(this);
-				myGui.showGui();*/
-				
+				/*
+				 * myGui = new FishBuyerGui(this); myGui.showGui();
+				 */
+				dineroDisponible = config.getBudget();
 				SequentialBehaviour seq = new SequentialBehaviour();
-				//No podemos dejar que el comprador busque a la lonja antes de que esta este registrada
-				seq.addSubBehaviour(new WakerBehaviour( this, 10000 ) {
-					
+				// No podemos dejar que el comprador busque a la lonja antes de que esta este
+				// registrada
+				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
+
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					 protected void handleElapsedTimeout() {
+					protected void handleElapsedTimeout() {
 						DFAgentDescription template = new DFAgentDescription();
 						ServiceDescription sd = new ServiceDescription();
 						sd.setType("lonja");
@@ -71,7 +71,6 @@ public class BuyerAgent extends POAAgent {
 				});
 				seq.addSubBehaviour(new OneShotBehaviour() {
 
-					
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -85,36 +84,31 @@ public class BuyerAgent extends POAAgent {
 						identificacion.addReceiver(LonjaAgent);
 						// le envia su nombre
 						identificacion.setContent(getName());
-						identificacion.setReplyWith("subscribe" + System.currentTimeMillis());
 						myAgent.send(identificacion);
-						//no se si habria que utilizar esto
-						
+						// no se si habria que utilizar esto
 
 					}
 				});
-				addBehaviour(seq);
-				/*seq.addSubBehaviour(new OneShotBehaviour() {
-
-					
+				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void action() {
+					protected void handleElapsedTimeout() {
 						// le enviamos un mensaje de tipo subscribe para que la lonja
 						// si cree que el comprador es valido se comprometa a informar
 						// cuando haya un pescado disponible
-						mt = MessageTemplate.MatchConversationId("registrar-comprador");
+						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
 							// si es un AGREE podemos deducir que si es un comprador
 							// valido
-							if (msg.getPerformative() == ACLMessage.AGREE) {
+							if (msg.getPerformative() == ACLMessage.INFORM) {
 								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
 								identificacion.addReceiver(LonjaAgent);
-								// le envia el saldo a la lonja para saber si es un comprador
-								// potencial
 								identificacion.setContent(String.valueOf(dineroDisponible));
+								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+								identificacion.setConversationId("OpenBuyerCreditProtocol");
 								creditoDisponible += dineroDisponible;
 								dineroDisponible = 0;
 								myAgent.send(identificacion);
@@ -123,7 +117,9 @@ public class BuyerAgent extends POAAgent {
 							}
 						}
 					}
-				});*/
+				});
+				addBehaviour(seq);
+				getLogger().info("INFO", "Peticion de saldo enviada");
 			} else {
 				doDelete();
 			}
@@ -146,6 +142,7 @@ public class BuyerAgent extends POAAgent {
 		}
 		return config;
 	}
+
 	public void anadirSaldo(double masSaldo) {
 		dineroDisponible += masSaldo;
 

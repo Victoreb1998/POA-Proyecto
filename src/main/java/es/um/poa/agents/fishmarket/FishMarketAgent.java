@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.protocols.AddBuyerProtocolResponder;
 import es.um.poa.protocols.AddSellerProtocolResponder;
+import es.um.poa.protocols.OpenBuyerCreditProtocolResponder;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -28,6 +29,7 @@ public class FishMarketAgent extends POAAgent {
 	// Lista con los AID de los compradores
 	private HashMap<AID, Double> compradoresAID;
 	private LinkedList<AID> vendedoresAID;
+	private FishMarketAgent fishMarket;
 
 	public boolean performActionAddBuyerProtocol(AID sender) {
 		// Hacer las Acciones correspondientes.
@@ -40,6 +42,7 @@ public class FishMarketAgent extends POAAgent {
 		// Hacer las Acciones correspondientes.
 		return !compradoresAID.containsKey(sender);
 	}
+
 	public boolean performActionAddSellerProtocol(AID sender) {
 		// Hacer las Acciones correspondientes.
 		return vendedoresAID.add(sender);
@@ -51,8 +54,18 @@ public class FishMarketAgent extends POAAgent {
 		return !vendedoresAID.contains(sender);
 	}
 
+	public boolean checkActionOpenCreditProtocol(String content) {
+		return Double.valueOf(content) < 0;
+	}
+
+	public boolean performActionOpenCreditProtocol(AID sender, String content) {
+		compradoresAID.put(sender, Double.valueOf(content));
+		return true;
+	}
+
 	public void setup() {
 		super.setup();
+		fishMarket = this;
 		Object[] args = getArguments();
 		String configFile = (String) args[0];
 		FishMarketAgentConfig config = initAgentFromConfigFile(configFile);
@@ -76,41 +89,23 @@ public class FishMarketAgent extends POAAgent {
 				} catch (FIPAException fe) {
 					fe.printStackTrace();
 				}
-				// Crear los comportamientos correspondientes
 				/*
-				 * MessageTemplate messageTemplate = null; // Completa con el protocolo FIPA
-				 * correspondiente y el mensajes correspondiente //MessageTemplate.and(
-				 * //MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.<>),
-				 * //MessageTemplate.MatchPerformative(ACLMessage.<>) //);
-				 * 
-				 * 
-				 * 
-				 * MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(
-				 * messageTemplate, MessageTemplate.MatchConversationId("AddBuyerProtocol"));
-				 * 
-				 * // AÃ±adimos el protocolo de adicion del comprador. addBehaviour(new
-				 * AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
-				 * this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
+				 * addBehaviour(new AddBuyerProtocolResponder(this, crearPlantilla(
+				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+				 * "AddBuyerProtocol"))); this.getLogger().info("INFO",
+				 * "AddBuyerProtocol sucessfully added"); addBehaviour(new
+				 * AddSellerProtocolResponder(this, crearPlantilla(
+				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+				 * "AddSellerProtocol"))); this.getLogger().info("INFO",
+				 * "AddSellerProtocol sucessfully added"); addBehaviour(new
+				 * OpenBuyerCreditProtocolResponder(this, crearPlantilla(
+				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+				 * "OpenBuyerCreditProtocol"))); this.getLogger().info("INFO",
+				 * "OpenBuyerCreditProtocol sucessfully added");
 				 */
-				MessageTemplate mt = MessageTemplate.and(
-						MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-						MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-				MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
-						MessageTemplate.MatchConversationId("AddBuyerProtocol"));
-				addBehaviour(new AddBuyerProtocolResponder(this,templateAddBuyerProtocol));
-				this.getLogger().info("INFO", "AddBuyerProtocol sucessfully added");
-				
-				MessageTemplate messageTemplate = MessageTemplate.and(
-						MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-						MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-				MessageTemplate templateAddSellerProtocol = MessageTemplate.and(messageTemplate,
-						MessageTemplate.MatchConversationId("AddSellerProtocol"));
-				addBehaviour(new AddSellerProtocolResponder(this,templateAddSellerProtocol));
-				this.getLogger().info("INFO", "AddSellerProtocol sucessfully added");
-		
-			
-				/*addBehaviour(new ComprobarComprador());
-				addBehaviour(new DescubirVendedor());*/
+				addBehaviour(new DescubrirComprador());
+				addBehaviour(new DescubrirVendedor());
+				addBehaviour(new ComprobarComprador());
 
 			} else {
 				doDelete();
@@ -135,50 +130,91 @@ public class FishMarketAgent extends POAAgent {
 		return config;
 	}
 
-	/*private class DescubrirComprador extends CyclicBehaviour {
+	private MessageTemplate crearPlantilla(String protocolo, int mensaje, String conversacion) {
+		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo),
+				MessageTemplate.MatchPerformative(mensaje));
+		MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
+				MessageTemplate.MatchConversationId(conversacion));
+		return templateAddBuyerProtocol;
+	}
+
+	private class DescubrirComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public void action() {
-			
-			
+			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+					"AddBuyerProtocol");
+			/*
+			 * Recibe un mensaje de ACL que coincide con una plantilla determinada. Este
+			 * método no bloquea y devuelve el primer mensaje coincidente en la cola, si lo
+			 * hay.
+			 */
 			ACLMessage msg = myAgent.receive(mt);
-
 			if (msg != null) {
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to admit a buyer received from "
+						+ msg.getSender().getLocalName());
 				compradoresAID.put(msg.getSender(), new Double(0));
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
+						+ msg.getSender().getLocalName() + " [AddBuyerProtocol]");
 				ACLMessage reply = msg.createReply();
-
-				reply.setPerformative(ACLMessage.AGREE);
-				reply.setConversationId("registrar-comprador");
+				reply.setConversationId("RegistroCorrecto");
+				reply.setPerformative(ACLMessage.INFORM);
 				myAgent.send(reply);
-			} else {
-				System.err.println("El mensaje de registro del comprador es nulo");
-
 			}
 
 		}
 
-	}*/
+	}
+	
+	private class DescubrirVendedor extends CyclicBehaviour {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public void action() {
+			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+					"AddSellerProtocol");
+			/*
+			 * Recibe un mensaje de ACL que coincide con una plantilla determinada. Este
+			 * método no bloquea y devuelve el primer mensaje coincidente en la cola, si lo
+			 * hay.
+			 */
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to admit a seller received from "
+						+ msg.getSender().getLocalName());
+				compradoresAID.put(msg.getSender(), new Double(0));
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
+						+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
+				ACLMessage reply = msg.createReply();
+				reply.setConversationId("RegistroCorrecto");
+				reply.setPerformative(ACLMessage.INFORM);
+				myAgent.send(reply);
+			}
+
+		}
+
+	}
 
 	private class ComprobarComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+					"OpenBuyerCreditProtocol");
 			ACLMessage msg = myAgent.receive(mt);
-
 			if (msg != null) {
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
+						+ msg.getSender().getLocalName() + " [OpenCreditProtocol]" + "Credit:" + msg.getContent());
 				ACLMessage reply = msg.createReply();
-				// si esta registrado en los compradores
 				if (compradoresAID.containsKey(msg.getSender())) {
-					reply.setPerformative(ACLMessage.AGREE);
-					myAgent.send(reply);
 
 					Double credito = Double.valueOf(msg.getContent());
-					// si la liquidez del comprador es mayor a la minima
 					if (credito >= dineroMinimo) {
 						compradoresAID.put(msg.getSender(), credito);
+						fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action failed for "
+								+ msg.getSender().getLocalName() + " [OpenCreditProtocol]");
 						reply.setPerformative(ACLMessage.INFORM);
 					} else {
 						reply.setPerformative(ACLMessage.FAILURE);
@@ -189,39 +225,7 @@ public class FishMarketAgent extends POAAgent {
 					myAgent.send(reply);
 				}
 
-			} else {
-				System.err.println("El mensaje del dinero del registro del comprador es nulo");
-
 			}
-		}
-
-	}
-
-	public class DescubirVendedor extends CyclicBehaviour {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
-			/*
-			 * Recibe un mensaje de ACL que coincide con una plantilla determinada. Este
-			 * método no bloquea y devuelve el primer mensaje coincidente en la cla, si lo
-			 * hay.
-			 */
-			ACLMessage msg = myAgent.receive(mt);
-
-			if (msg != null) {
-				vendedoresAID.add(msg.getSender());
-				ACLMessage reply = msg.createReply();
-
-				reply.setPerformative(ACLMessage.AGREE);
-				reply.setConversationId("registrar-vendedor");
-				myAgent.send(reply);
-			} else {
-				System.err.println("El mensaje de registro del comprador es nulo");
-
-			}
-
 		}
 
 	}
