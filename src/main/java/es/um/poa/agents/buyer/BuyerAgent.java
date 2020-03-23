@@ -89,7 +89,7 @@ public class BuyerAgent extends POAAgent {
 
 					}
 				});
-				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
+				seq.addSubBehaviour(new WakerBehaviour(this, 500) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 

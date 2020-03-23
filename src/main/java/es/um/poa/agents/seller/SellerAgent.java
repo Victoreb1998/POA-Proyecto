@@ -91,21 +91,6 @@ public class SellerAgent extends POAAgent {
 				});
 				addBehaviour(seq);
 				/*
-				 * SequentialBehaviour seq = new SequentialBehaviour(); seq.addSubBehaviour(new
-				 * OneShotBehaviour() {
-				 * 
-				 * 
-				 * private static final long serialVersionUID = 1L;
-				 * 
-				 * @Override public void action() { // le enviamos un mensaje de tipo subscribe
-				 * para que la lonja // si cree que el vendedorr es valido se comprometa a
-				 * informar // cuando se haya vendido un pescado suyo ACLMessage identificacion
-				 * = new ACLMessage(ACLMessage.SUBSCRIBE);
-				 * identificacion.addReceiver(LonjaAgent); // le envia su nombre
-				 * identificacion.setContent(getName()); myAgent.send(identificacion);
-				 * 
-				 * } }); //protocolo para enviar capturas de pescados, debería ser un cyclic si
-				 * tenemos varios barcos, //le he enviado una duda al profesor, no hacer aún
 				 * seq.addSubBehaviour(new OneShotBehaviour() {
 				 * 
 				 * 

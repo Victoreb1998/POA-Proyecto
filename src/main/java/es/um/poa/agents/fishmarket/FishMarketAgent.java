@@ -30,7 +30,7 @@ public class FishMarketAgent extends POAAgent {
 	private HashMap<AID, Double> compradoresAID;
 	private LinkedList<AID> vendedoresAID;
 	private FishMarketAgent fishMarket;
-
+	
 	public boolean performActionAddBuyerProtocol(AID sender) {
 		// Hacer las Acciones correspondientes.
 		compradoresAID.put(sender, new Double(0));
@@ -89,20 +89,6 @@ public class FishMarketAgent extends POAAgent {
 				} catch (FIPAException fe) {
 					fe.printStackTrace();
 				}
-				/*
-				 * addBehaviour(new AddBuyerProtocolResponder(this, crearPlantilla(
-				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
-				 * "AddBuyerProtocol"))); this.getLogger().info("INFO",
-				 * "AddBuyerProtocol sucessfully added"); addBehaviour(new
-				 * AddSellerProtocolResponder(this, crearPlantilla(
-				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
-				 * "AddSellerProtocol"))); this.getLogger().info("INFO",
-				 * "AddSellerProtocol sucessfully added"); addBehaviour(new
-				 * OpenBuyerCreditProtocolResponder(this, crearPlantilla(
-				 * FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
-				 * "OpenBuyerCreditProtocol"))); this.getLogger().info("INFO",
-				 * "OpenBuyerCreditProtocol sucessfully added");
-				 */
 				addBehaviour(new DescubrirComprador());
 				addBehaviour(new DescubrirVendedor());
 				addBehaviour(new ComprobarComprador());
