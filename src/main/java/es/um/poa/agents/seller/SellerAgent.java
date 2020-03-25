@@ -3,7 +3,7 @@ package es.um.poa.agents.seller;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.util.List;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -20,12 +20,13 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class SellerAgent extends POAAgent {
 
 	private static final long serialVersionUID = 1L;
 	// duda precio minimo
-	private HashMap<String, Precio> catalogue;
+	private List<Lot> catalogue;
 	private FishSellerGui myGui;
 	private AID LonjaAgent;
 	private int dinero = 0;
@@ -39,7 +40,7 @@ public class SellerAgent extends POAAgent {
 			SellerAgentConfig config = initAgentFromConfigFile(configFile);
 
 			if (config != null) {
-				catalogue = new HashMap<String, Precio>();
+				catalogue = config.getLots();
 
 				// Registrar el servicio de venta de libros en las paginas amarillas
 				SequentialBehaviour seq = new SequentialBehaviour();
@@ -86,21 +87,36 @@ public class SellerAgent extends POAAgent {
 
 					}
 				});
+				seq.addSubBehaviour(new WakerBehaviour(this,500) {
+					private MessageTemplate mt;
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					protected void handleElapsedTimeout() {
+						//recibimos la respuesta
+						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
+						ACLMessage msg = myAgent.receive(mt);
+						if (msg != null) {
+							//si el comprador se ha podido registrar(INFORM) podrá abrir un credito
+							if (msg.getPerformative() == ACLMessage.INFORM) {
+								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
+								identificacion.addReceiver(LonjaAgent);
+								String paraEnviar = "";
+								for (Lot l: catalogue) {
+									paraEnviar += l.paraEnviar()+",";
+								}
+								identificacion.setContent(paraEnviar);
+								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+								identificacion.setConversationId("SellerLot");
+								myAgent.send(identificacion);
+							} else {
+								block();
+							}
+						}
+					}
+				});
 				addBehaviour(seq);
-				/*
-				 * seq.addSubBehaviour(new OneShotBehaviour() {
-				 * 
-				 * 
-				 * private static final long serialVersionUID = 1L;
-				 * 
-				 * @Override public void action() {
-				 * 
-				 * // no se si es subscribe ACLMessage identificacion = new
-				 * ACLMessage(ACLMessage.SUBSCRIBE); identificacion.addReceiver(LonjaAgent); //
-				 * le envia su nombre identificacion.setContent(getName());
-				 * myAgent.send(identificacion);
-				 * 
-				 * } }); //protocolo para recepción de pago. El vendedor recibirá un inform dado
+				/*protocolo para recepción de pago. El vendedor recibirá un inform dado
 				 * que antes le ha enviado un subscribe a la lonja //Despues extraerá el dinero
 				 * que tiene que venir en el inform y lo sumará a su cuenta //solo se debe pagar
 				 * al vendedor cuando lo decida la lonja //Es decir podemos ir pagando cada vez
@@ -163,7 +179,7 @@ public class SellerAgent extends POAAgent {
 
 			@Override
 			public void action() {
-				catalogue.put(name, precio);
+				//catalogue.put(name, precio);
 
 			}
 		});

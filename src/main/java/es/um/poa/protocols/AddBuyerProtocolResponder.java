@@ -56,6 +56,7 @@ public class AddBuyerProtocolResponder extends AchieveREResponder
 	protected ACLMessage handleRequest(ACLMessage request) throws NotUnderstoodException, RefuseException {
 		
 		System.out.println();
+		System.out.println("Hola");
 		fishMarket.getLogger().info("INFO",fishMarket.getLocalName() + ": REQUEST to admit a buyer received from " + request.getSender().getLocalName());
 		// Comprobamos si podemos llevar a cabo la peticion.
 		if (fishMarket.checkActionAddBuyerProtocol(request.getSender())) {

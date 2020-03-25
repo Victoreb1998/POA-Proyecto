@@ -35,12 +35,14 @@ public class AddBuyerProtocolInitiator extends AchieveREInitiator{
 		// Guardamos el agente que implemnta el protocolo (el agente comprador).
 		try {
 			buyer = (BuyerAgent) a;
+			buyer.send(msg);
 		} catch (ClassCastException e) {
 			// Si ocurre algún error informamos de ello y lo lanzamos hacia arriba.
 			buyer.getLogger().info("ERROR", "The agent is not an instance of class that we expect (" + BuyerAgent.class.getName() + ").");
 			e.printStackTrace();
 			throw e;
 		}
+		
 	}
 	
 	/**

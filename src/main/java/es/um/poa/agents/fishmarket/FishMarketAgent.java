@@ -4,11 +4,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
+import es.um.poa.agents.seller.Lot;
+import es.um.poa.protocols.AddBuyerProtocolResponder;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -25,9 +26,9 @@ public class FishMarketAgent extends POAAgent {
 	private double dineroMinimo = 50;
 	// Lista con los AID de los compradores
 	private HashMap<AID, Double> compradoresAID;
-	private LinkedList<AID> vendedoresAID;
+	private HashMap<AID, Lot> vendedoresAID;
 	private FishMarketAgent fishMarket;
-	
+
 	public boolean performActionAddBuyerProtocol(AID sender) {
 		// Hacer las Acciones correspondientes.
 		compradoresAID.put(sender, new Double(0));
@@ -42,13 +43,14 @@ public class FishMarketAgent extends POAAgent {
 
 	public boolean performActionAddSellerProtocol(AID sender) {
 		// Hacer las Acciones correspondientes.
-		return vendedoresAID.add(sender);
+		vendedoresAID.put(sender, null);
+		return true;
 	}
 
 	public boolean checkActionAddSellerProtocol(AID sender) {
 
 		// Hacer las Acciones correspondientes.
-		return !vendedoresAID.contains(sender);
+		return !vendedoresAID.containsKey(sender);
 	}
 
 	public boolean checkActionOpenCreditProtocol(String content) {
@@ -71,7 +73,7 @@ public class FishMarketAgent extends POAAgent {
 
 			if (config != null) {
 				compradoresAID = new HashMap<AID, Double>();
-				vendedoresAID = new LinkedList<AID>();
+				vendedoresAID = new HashMap<AID, Lot>();
 				// Registrar el servicio en las paginas amarillas
 				DFAgentDescription dfd = new DFAgentDescription();
 				dfd.setName(getAID());
@@ -89,6 +91,7 @@ public class FishMarketAgent extends POAAgent {
 				addBehaviour(new DescubrirComprador());
 				addBehaviour(new DescubrirVendedor());
 				addBehaviour(new ComprobarComprador());
+				addBehaviour(new RecibirLot());
 
 			} else {
 				doDelete();
@@ -135,8 +138,8 @@ public class FishMarketAgent extends POAAgent {
 			 */
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to admit a buyer received from "
-						+ msg.getSender().getLocalName());
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
+						+ ": REQUEST to admit a buyer received from " + msg.getSender().getLocalName());
 				compradoresAID.put(msg.getSender(), new Double(0));
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
 						+ msg.getSender().getLocalName() + " [AddBuyerProtocol]");
@@ -149,7 +152,7 @@ public class FishMarketAgent extends POAAgent {
 		}
 
 	}
-	
+
 	private class DescubrirVendedor extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
@@ -164,9 +167,9 @@ public class FishMarketAgent extends POAAgent {
 			 */
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to admit a seller received from "
-						+ msg.getSender().getLocalName());
-				compradoresAID.put(msg.getSender(), new Double(0));
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
+						+ ": REQUEST to admit a seller received from " + msg.getSender().getLocalName());
+				vendedoresAID.put(msg.getSender(), null);
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
 						+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
 				ACLMessage reply = msg.createReply();
@@ -177,6 +180,58 @@ public class FishMarketAgent extends POAAgent {
 
 		}
 
+	}
+
+	private class RecibirLot extends CyclicBehaviour {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public void action() {
+			//plantilla que se ha de corresponder con el protocolo de recibir los peces
+			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+					"SellerLot");
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
+				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to sell fish received from "
+						+ msg.getSender().getLocalName());
+				//la contestacion que enviaremos
+				ACLMessage reply = msg.createReply();
+				if (vendedoresAID.containsKey(msg.getSender())) {
+					//Aqui separamos los diferentes lots, que esta divididos por comas
+					String[] parse = msg.getContent().split(",");
+					for (String s : parse) {
+						Lot l = new Lot();
+						//Aqui separamos cada componente del lot, que estan separados por espacios
+						String[] parseAux = s.split(" ");
+						for (int i = 0; i < parseAux.length; i++) {
+							//Si el el primer elemento es el peso disponible del tipo de pescado
+							if (i == 0) {
+								l.setKg(Float.valueOf(parseAux[0]));
+								//si es el segundo elemento es el tipo de pescado
+							} else if (i == 1) {
+								l.setType(parseAux[1]);
+								//si es el tercer elemento es el precio minimo puesto por el vendedor para retirar el pescado si
+								//no hay pujas
+							} else if (i == 2) {
+								l.setPrecioMin(Float.valueOf(parseAux[2]));
+								//finalmente si es el cuarto elemento es el precio de inicio fijado por el vendedor para
+								// el inicio de la subasta
+							} else {
+								l.setPrecioInicio(Float.valueOf(parseAux[3]));
+							}
+						}
+						vendedoresAID.put(msg.getSender(), l);
+					}
+					//falta enviar la contestación
+
+				} else {
+					reply.setPerformative(ACLMessage.REFUSE);
+					myAgent.send(reply);
+				}
+
+			}
+
+		}
 	}
 
 	private class ComprobarComprador extends CyclicBehaviour {
@@ -196,8 +251,10 @@ public class FishMarketAgent extends POAAgent {
 					Double credito = Double.valueOf(msg.getContent());
 					if (credito >= dineroMinimo) {
 						compradoresAID.put(msg.getSender(), credito);
-						fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
-								+ msg.getSender().getLocalName() + " [OpenCreditProtocol]" + "Credit:" + msg.getContent());
+						fishMarket.getLogger().info("INFO",
+								fishMarket.getLocalName() + ": Action successfully performed for "
+										+ msg.getSender().getLocalName() + " [OpenCreditProtocol]" + "Credit:"
+										+ msg.getContent());
 						reply.setPerformative(ACLMessage.INFORM);
 					} else {
 						reply.setPerformative(ACLMessage.FAILURE);
