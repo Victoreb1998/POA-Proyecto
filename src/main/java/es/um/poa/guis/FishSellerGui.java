@@ -28,7 +28,7 @@ import javax.swing.*;
 
 
 import es.um.poa.agents.seller.SellerAgent;
-import es.um.poa.modelo.Precio;
+
 
 /**
   @author Giovanni Caire - TILAB
@@ -73,7 +73,6 @@ public class FishSellerGui extends JFrame {
 					String name = fishName.getText().trim();
 					String startingPrice = precioSalida.getText().trim();
 					String minimunPrice = precioMinimo.getText().trim();
-					myAgent.updateCatalogue(name, new Precio(Integer.parseInt(startingPrice), Integer.parseInt(minimunPrice)));
 					fishName.setText("");
 					precioSalida.setText("");
 				}

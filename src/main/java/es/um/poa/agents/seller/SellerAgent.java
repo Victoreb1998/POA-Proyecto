@@ -9,7 +9,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishSellerGui;
-import es.um.poa.modelo.Precio;
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
@@ -171,7 +170,7 @@ public class SellerAgent extends POAAgent {
 		return config;
 	}
 
-	public void updateCatalogue(String name, Precio precio) {
+	/*public void updateCatalogue(String name, Precio precio) {
 
 		addBehaviour(new OneShotBehaviour() {
 
@@ -183,5 +182,5 @@ public class SellerAgent extends POAAgent {
 
 			}
 		});
-	}
+	}*/
 }
