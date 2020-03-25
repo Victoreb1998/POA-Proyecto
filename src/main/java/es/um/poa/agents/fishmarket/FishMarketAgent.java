@@ -4,12 +4,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.yaml.snakeyaml.Yaml;
 
 import es.um.poa.agents.POAAgent;
 import es.um.poa.agents.seller.Lot;
-import es.um.poa.protocols.AddBuyerProtocolResponder;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -26,7 +27,7 @@ public class FishMarketAgent extends POAAgent {
 	private double dineroMinimo = 50;
 	// Lista con los AID de los compradores
 	private HashMap<AID, Double> compradoresAID;
-	private HashMap<AID, Lot> vendedoresAID;
+	private HashMap<AID, List<Lot>> vendedoresAID;
 	private FishMarketAgent fishMarket;
 
 	public boolean performActionAddBuyerProtocol(AID sender) {
@@ -73,7 +74,7 @@ public class FishMarketAgent extends POAAgent {
 
 			if (config != null) {
 				compradoresAID = new HashMap<AID, Double>();
-				vendedoresAID = new HashMap<AID, Lot>();
+				vendedoresAID = new HashMap<AID, List<Lot>>();
 				// Registrar el servicio en las paginas amarillas
 				DFAgentDescription dfd = new DFAgentDescription();
 				dfd.setName(getAID());
@@ -169,7 +170,7 @@ public class FishMarketAgent extends POAAgent {
 			if (msg != null) {
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
 						+ ": REQUEST to admit a seller received from " + msg.getSender().getLocalName());
-				vendedoresAID.put(msg.getSender(), null);
+				vendedoresAID.put(msg.getSender(), new LinkedList<Lot>());
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": Action successfully performed for "
 						+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
 				ACLMessage reply = msg.createReply();
@@ -187,42 +188,48 @@ public class FishMarketAgent extends POAAgent {
 
 		@Override
 		public void action() {
-			//plantilla que se ha de corresponder con el protocolo de recibir los peces
+			// plantilla que se ha de corresponder con el protocolo de recibir los peces
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
 					"SellerLot");
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName() + ": REQUEST to sell fish received from "
 						+ msg.getSender().getLocalName());
-				//la contestacion que enviaremos
+				// la contestacion que enviaremos
 				ACLMessage reply = msg.createReply();
 				if (vendedoresAID.containsKey(msg.getSender())) {
-					//Aqui separamos los diferentes lots, que esta divididos por comas
+					// Aqui separamos los diferentes lots, que esta divididos por comas
 					String[] parse = msg.getContent().split(",");
+					// recuperamos los lotes que podamos tener con anterioridad
+					// como la inicializamos a una lista vacia al registrar el vendedor no hay
+					// problema con los null
+					List<Lot> lotes = vendedoresAID.get(msg.getSender());
 					for (String s : parse) {
 						Lot l = new Lot();
-						//Aqui separamos cada componente del lot, que estan separados por espacios
+						// Aqui separamos cada componente del lot, que estan separados por espacios
 						String[] parseAux = s.split(" ");
-						for (int i = 0; i < parseAux.length; i++) {
-							//Si el el primer elemento es el peso disponible del tipo de pescado
-							if (i == 0) {
-								l.setKg(Float.valueOf(parseAux[0]));
-								//si es el segundo elemento es el tipo de pescado
-							} else if (i == 1) {
-								l.setType(parseAux[1]);
-								//si es el tercer elemento es el precio minimo puesto por el vendedor para retirar el pescado si
-								//no hay pujas
-							} else if (i == 2) {
-								l.setPrecioMin(Float.valueOf(parseAux[2]));
-								//finalmente si es el cuarto elemento es el precio de inicio fijado por el vendedor para
-								// el inicio de la subasta
-							} else {
-								l.setPrecioInicio(Float.valueOf(parseAux[3]));
-							}
-						}
-						vendedoresAID.put(msg.getSender(), l);
+
+						l.setKg(Float.valueOf(parseAux[0]));
+						// si es el segundo elemento es el tipo de pescado
+
+						l.setType(parseAux[1]);
+						// si es el tercer elemento es el precio minimo puesto por el vendedor para
+						// retirar el pescado si
+						// no hay pujas
+
+						l.setPrecioMin(Float.valueOf(parseAux[2]));
+						// finalmente si es el cuarto elemento es el precio de inicio fijado por el
+						// vendedor para
+						// el inicio de la subasta
+
+						l.setPrecioInicio(Float.valueOf(parseAux[3]));
+						lotes.add(l);
 					}
-					//falta enviar la contestación
+					vendedoresAID.put(msg.getSender(), lotes);
+					// contestación
+					reply.setConversationId("Recepcion de pescados");
+					reply.setPerformative(ACLMessage.INFORM);
+					myAgent.send(reply);
 
 				} else {
 					reply.setPerformative(ACLMessage.REFUSE);
@@ -239,6 +246,7 @@ public class FishMarketAgent extends POAAgent {
 
 		@Override
 		public void action() {
+			//plantilla que corresponde con la apertura de credito
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
 					"OpenBuyerCreditProtocol");
 			ACLMessage msg = myAgent.receive(mt);
@@ -246,10 +254,14 @@ public class FishMarketAgent extends POAAgent {
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
 						+ ": REQUEST to open a credit to a buyer received from " + msg.getSender().getLocalName());
 				ACLMessage reply = msg.createReply();
+				//comprobamos si el comprador esta registrado
 				if (compradoresAID.containsKey(msg.getSender())) {
 
 					Double credito = Double.valueOf(msg.getContent());
+					//comprobamos si la apertura de credito del vendedor es suficiente
+					//para el minimo de la lonja
 					if (credito >= dineroMinimo) {
+						//abrimos el credito
 						compradoresAID.put(msg.getSender(), credito);
 						fishMarket.getLogger().info("INFO",
 								fishMarket.getLocalName() + ": Action successfully performed for "
