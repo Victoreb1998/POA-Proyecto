@@ -30,39 +30,6 @@ public class FishMarketAgent extends POAAgent {
 	private HashMap<AID, List<Lot>> vendedoresAID;
 	private FishMarketAgent fishMarket;
 
-	public boolean performActionAddBuyerProtocol(AID sender) {
-		// Hacer las Acciones correspondientes.
-		compradoresAID.put(sender, new Double(0));
-		return true;
-	}
-
-	public boolean checkActionAddBuyerProtocol(AID sender) {
-
-		// Hacer las Acciones correspondientes.
-		return !compradoresAID.containsKey(sender);
-	}
-
-	public boolean performActionAddSellerProtocol(AID sender) {
-		// Hacer las Acciones correspondientes.
-		vendedoresAID.put(sender, null);
-		return true;
-	}
-
-	public boolean checkActionAddSellerProtocol(AID sender) {
-
-		// Hacer las Acciones correspondientes.
-		return !vendedoresAID.containsKey(sender);
-	}
-
-	public boolean checkActionOpenCreditProtocol(String content) {
-		return Double.valueOf(content) < 0;
-	}
-
-	public boolean performActionOpenCreditProtocol(AID sender, String content) {
-		compradoresAID.put(sender, Double.valueOf(content));
-		return true;
-	}
-
 	public void setup() {
 		super.setup();
 		fishMarket = this;
