@@ -224,6 +224,7 @@ public class FishMarketAgent extends POAAgent {
 
 						l.setPrecioInicio(Float.valueOf(parseAux[3]));
 						lotes.add(l);
+						fishMarket.getLogger().info("INFO", "Lot recibido correctamente: "+ l.toString());
 					}
 					vendedoresAID.put(msg.getSender(), lotes);
 					// contestación

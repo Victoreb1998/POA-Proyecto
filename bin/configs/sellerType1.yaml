@@ -2,5 +2,9 @@
 lots:
   - kg: 10.0
     type: "sardina"
+    precioMin: 100
+    precioInicio: 200.0
   - kg: 6.0
     type: "boquerón"
+    precioMin: 60
+    precioInicio: 150.0

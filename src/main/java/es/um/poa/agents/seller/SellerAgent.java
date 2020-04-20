@@ -107,6 +107,7 @@ public class SellerAgent extends POAAgent {
 								identificacion.setContent(paraEnviar);
 								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								identificacion.setConversationId("SellerLot");
+								getLogger().info("INFO", "Lot enviado correctamente: "+paraEnviar);
 								myAgent.send(identificacion);
 							} else {
 								block();
