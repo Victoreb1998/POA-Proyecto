@@ -308,7 +308,7 @@ public class FishMarketAgent extends POAAgent {
 							Double dinero = compradoresAID.get(ganador);
 							dinero -= precio;
 							compradoresAID.put(ganador, dinero);
-							
+							 
 							
 							Parada = false;
 						}else {
