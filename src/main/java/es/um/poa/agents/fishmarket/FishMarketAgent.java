@@ -309,7 +309,7 @@ public class FishMarketAgent extends POAAgent {
 							dinero -= precio;
 							compradoresAID.put(ganador, dinero);
 							 
-							
+							 
 							Parada = false;
 						}else {
 							precio -= precio / 10;
