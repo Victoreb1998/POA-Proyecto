@@ -298,7 +298,7 @@ public class FishMarketAgent extends POAAgent {
 						MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
 								ACLMessage.REFUSE, ACLMessage.AGREE, "RespuestaOfertaProtocolo");
 						for (AID comprador : compradoresAID.keySet()) {
-							
+							 
 						}
 					}
 
