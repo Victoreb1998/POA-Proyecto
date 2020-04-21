@@ -308,9 +308,15 @@ public class FishMarketAgent extends POAAgent {
 							Double dinero = compradoresAID.get(ganador);
 							dinero -= precio;
 							compradoresAID.put(ganador, dinero);
-							 
-							 
 							Parada = false;
+							
+							//informar al comprador que ha ganado 
+							ACLMessage respuesta = new ACLMessage(ACLMessage.REQUEST);
+							respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+							respuesta.setConversationId("OfertaAceptadaProtocolo");
+							respuesta.addReceiver(ganador);
+							respuesta.setContent(String.valueOf(precio));
+							myAgent.send(respuesta);
 						}else {
 							precio -= precio / 10;
 						}
