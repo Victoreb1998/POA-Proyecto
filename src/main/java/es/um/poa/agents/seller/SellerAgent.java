@@ -170,7 +170,7 @@ public class SellerAgent extends POAAgent {
 		}
 		return config;
 	}
-  
+   
 	/*public void updateCatalogue(String name, Precio precio) {
 
 		addBehaviour(new OneShotBehaviour() {

@@ -301,7 +301,7 @@ public class FishMarketAgent extends POAAgent {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						
+						 
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
 							AID ganador = msg.getSender();
