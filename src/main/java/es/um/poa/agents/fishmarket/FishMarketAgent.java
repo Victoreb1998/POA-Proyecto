@@ -272,8 +272,8 @@ public class FishMarketAgent extends POAAgent {
 		protected void onTick() {
 			Set<AID> vendedores = vendedoresAID.keySet();
 			for (AID vendedor : vendedores) {
-				ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
-				identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+				ACLMessage identificacion = new ACLMessage(ACLMessage.PROPOSE);
+				identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
 				identificacion.setConversationId("OfertaLonjaProtocolo");
 				// añadimos como receptor a todos los compradores
 				for (AID aid : compradoresAID.keySet())
@@ -287,19 +287,34 @@ public class FishMarketAgent extends POAAgent {
 					String puja;
 					Boolean Parada = true;
 					float minimo = lot.getPrecioMin();
+					MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
+							 ACLMessage.ACCEPT_PROPOSAL, "RespuestaOfertaProtocolo");
 					while (precio >= minimo && Parada) {
 
 						puja = lot.paraPuja(precio);
 						identificacion.setContent(puja);
 						fishMarket.getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
 						myAgent.send(identificacion);
-						precio -= precio / 10;
-
-						MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
-								ACLMessage.REFUSE, ACLMessage.AGREE, "RespuestaOfertaProtocolo");
-						for (AID comprador : compradoresAID.keySet()) {
-							 
+						
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
 						}
+						
+						ACLMessage msg = myAgent.receive(mt);
+						if (msg != null) {
+							AID ganador = msg.getSender();
+							Double dinero = compradoresAID.get(ganador);
+							dinero -= precio;
+							compradoresAID.put(ganador, dinero);
+							
+							
+							Parada = false;
+						}else {
+							precio -= precio / 10;
+						}
+						
 					}
 
 				}
