@@ -15,6 +15,9 @@ public class Lot {
 		return kg + " " + type + " " + precioMin + " " + precioInicio;
 	}
 
+	public String paraPuja(float precio) {
+		return kg + " " + type + " " + precio;
+	}
 	public float getKg() {
 		return kg;
 	}

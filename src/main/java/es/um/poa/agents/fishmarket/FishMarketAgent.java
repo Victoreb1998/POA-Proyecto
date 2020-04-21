@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -89,6 +90,14 @@ public class FishMarketAgent extends POAAgent {
 	private MessageTemplate crearPlantilla(String protocolo, int mensaje, String conversacion) {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo),
 				MessageTemplate.MatchPerformative(mensaje));
+		MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
+				MessageTemplate.MatchConversationId(conversacion));
+		return templateAddBuyerProtocol;
+	}
+
+	private MessageTemplate crearPlantilla(String protocolo, int mensaje1, int mensaje2, String conversacion) {
+		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo), MessageTemplate
+				.or(MessageTemplate.MatchPerformative(mensaje1), MessageTemplate.MatchPerformative(mensaje2)));
 		MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
 				MessageTemplate.MatchConversationId(conversacion));
 		return templateAddBuyerProtocol;
@@ -251,18 +260,53 @@ public class FishMarketAgent extends POAAgent {
 		}
 
 	}
+
 	private class EnviarInfoSubasta extends TickerBehaviour {
 
 		public EnviarInfoSubasta(Agent a, long period) {
 			super(a, period);
-			// TODO Auto-generated constructor stub
+
 		}
 
 		@Override
 		protected void onTick() {
-			
-			
+			Set<AID> vendedores = vendedoresAID.keySet();
+			for (AID vendedor : vendedores) {
+				ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
+				identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+				identificacion.setConversationId("OfertaLonjaProtocolo");
+				// añadimos como receptor a todos los compradores
+				for (AID aid : compradoresAID.keySet())
+					identificacion.addReceiver(aid);
+
+				List<Lot> lots = vendedoresAID.get(vendedor);
+
+				for (Lot lot : lots) {
+					// para cada lote empezamos la subasta
+					float precio = lot.getPrecioInicio();
+					String puja;
+					Boolean Parada = true;
+					float minimo = lot.getPrecioMin();
+					while (precio >= minimo && Parada) {
+
+						puja = lot.paraPuja(precio);
+						identificacion.setContent(puja);
+						fishMarket.getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
+						myAgent.send(identificacion);
+						precio -= precio / 10;
+
+						MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
+								ACLMessage.REFUSE, ACLMessage.AGREE, "RespuestaOfertaProtocolo");
+						for (AID comprador : compradoresAID.keySet()) {
+							
+						}
+					}
+
+				}
+
+			}
+
 		}
-		
+
 	}
 }

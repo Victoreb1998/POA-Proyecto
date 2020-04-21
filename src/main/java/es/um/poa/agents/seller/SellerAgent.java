@@ -82,7 +82,7 @@ public class SellerAgent extends POAAgent {
 						identificacion.setContent(getName());
 						identificacion.setReplyWith("subscribe" + System.currentTimeMillis());
 						myAgent.send(identificacion);
-						// no se si habria que utilizar esto
+						
 
 					}
 				});
