@@ -12,7 +12,9 @@ import org.yaml.snakeyaml.Yaml;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.agents.seller.Lot;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -191,7 +193,7 @@ public class FishMarketAgent extends POAAgent {
 
 						l.setPrecioInicio(Float.valueOf(parseAux[3]));
 						lotes.add(l);
-						fishMarket.getLogger().info("INFO", "Lot recibido correctamente: "+ l.toString());
+						fishMarket.getLogger().info("INFO", "Lot recibido correctamente: " + l.toString());
 					}
 					vendedoresAID.put(msg.getSender(), lotes);
 					// contestación
@@ -214,7 +216,7 @@ public class FishMarketAgent extends POAAgent {
 
 		@Override
 		public void action() {
-			//plantilla que corresponde con la apertura de credito
+			// plantilla que corresponde con la apertura de credito
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
 					"OpenBuyerCreditProtocol");
 			ACLMessage msg = myAgent.receive(mt);
@@ -222,14 +224,14 @@ public class FishMarketAgent extends POAAgent {
 				fishMarket.getLogger().info("INFO", fishMarket.getLocalName()
 						+ ": REQUEST to open a credit to a buyer received from " + msg.getSender().getLocalName());
 				ACLMessage reply = msg.createReply();
-				//comprobamos si el comprador esta registrado
+				// comprobamos si el comprador esta registrado
 				if (compradoresAID.containsKey(msg.getSender())) {
 
 					Double credito = Double.valueOf(msg.getContent());
-					//comprobamos si la apertura de credito del vendedor es suficiente
-					//para el minimo de la lonja
+					// comprobamos si la apertura de credito del vendedor es suficiente
+					// para el minimo de la lonja
 					if (credito >= dineroMinimo) {
-						//abrimos el credito
+						// abrimos el credito
 						compradoresAID.put(msg.getSender(), credito);
 						fishMarket.getLogger().info("INFO",
 								fishMarket.getLocalName() + ": Action successfully performed for "
@@ -248,5 +250,19 @@ public class FishMarketAgent extends POAAgent {
 			}
 		}
 
+	}
+	private class EnviarInfoSubasta extends TickerBehaviour {
+
+		public EnviarInfoSubasta(Agent a, long period) {
+			super(a, period);
+			// TODO Auto-generated constructor stub
+		}
+
+		@Override
+		protected void onTick() {
+			
+			
+		}
+		
 	}
 }
