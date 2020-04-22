@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.yaml.snakeyaml.Yaml;
 
+import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.agents.seller.Lot;
 import jade.core.AID;
@@ -262,9 +263,12 @@ public class FishMarketAgent extends POAAgent {
 	}
 
 	private class EnviarInfoSubasta extends TickerBehaviour {
-
+		private Boolean Parada;
+		float precio;
 		public EnviarInfoSubasta(Agent a, long period) {
 			super(a, period);
+			Parada = true;
+			precio=0;
 
 		}
 
@@ -283,44 +287,51 @@ public class FishMarketAgent extends POAAgent {
 
 				for (Lot lot : lots) {
 					// para cada lote empezamos la subasta
-					float precio = lot.getPrecioInicio();
+					precio = lot.getPrecioInicio();
 					String puja;
-					Boolean Parada = true;
 					float minimo = lot.getPrecioMin();
 					MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
-							 ACLMessage.ACCEPT_PROPOSAL, "RespuestaOfertaProtocolo");
+							ACLMessage.ACCEPT_PROPOSAL, "RespuestaOfertaProtocolo");
 					while (precio >= minimo && Parada) {
 
 						puja = lot.paraPuja(precio);
 						identificacion.setContent(puja);
 						fishMarket.getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
 						myAgent.send(identificacion);
-						
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+
+						myAgent.addBehaviour(new DelayBehaviour(myAgent, 500) {
+
+							/**
+							 * 
+							 */
+							private static final long serialVersionUID = 1L;
+
+							protected void handleElapsedTimeout() {
+								ACLMessage msg = myAgent.receive(mt);
+								if (msg != null) {
+									AID ganador = msg.getSender();
+									Double dinero = compradoresAID.get(ganador);
+									dinero -= precio;
+									compradoresAID.put(ganador, dinero);
+									Parada = false;
+
+									// informar al comprador que ha ganado
+									ACLMessage respuesta = new ACLMessage(ACLMessage.REQUEST);
+									respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+									respuesta.setConversationId("OfertaAceptadaProtocolo");
+									respuesta.addReceiver(ganador);
+									respuesta.setContent(String.valueOf(precio));
+									myAgent.send(respuesta);
+								} else {
+									precio -= precio / 10;
+								}
+
+							}
+
 						}
-						 
-						ACLMessage msg = myAgent.receive(mt);
-						if (msg != null) {
-							AID ganador = msg.getSender();
-							Double dinero = compradoresAID.get(ganador);
-							dinero -= precio;
-							compradoresAID.put(ganador, dinero);
-							Parada = false;
-							
-							//informar al comprador que ha ganado 
-							ACLMessage respuesta = new ACLMessage(ACLMessage.REQUEST);
-							respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-							respuesta.setConversationId("OfertaAceptadaProtocolo");
-							respuesta.addReceiver(ganador);
-							respuesta.setContent(String.valueOf(precio));
-							myAgent.send(respuesta);
-						}else {
-							precio -= precio / 10;
-						}
-						
+
+						);
+
 					}
 
 				}
