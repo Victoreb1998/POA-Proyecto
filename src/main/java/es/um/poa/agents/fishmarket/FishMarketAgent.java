@@ -332,6 +332,7 @@ public class FishMarketAgent extends POAAgent {
 									//TODO eliminar el pescado de la subasta y notificar al vendedor
 									lots.remove(lot);
 									vendedoresAID.put(vendedor, lots);
+									System.out.println("commit");
 									
 								} else {
 									fishMarket.getLogger().info("INFO", "Ningun comprador ha pujado");
