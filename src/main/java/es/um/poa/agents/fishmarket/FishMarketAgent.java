@@ -328,6 +328,9 @@ public class FishMarketAgent extends POAAgent {
 									respuesta.addReceiver(ganador);
 									respuesta.setContent(String.valueOf(precio));
 									myAgent.send(respuesta);
+									
+									//TODO eliminar el pescado de la subasta y notificar al vendedor
+									
 								} else {
 									fishMarket.getLogger().info("INFO", "Ningun comprador ha pujado");
 									precio -= precio / 10;
