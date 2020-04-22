@@ -289,8 +289,8 @@ public class FishMarketAgent extends POAAgent {
 					identificacion.addReceiver(aid);
 
 				List<Lot> lots = vendedoresAID.get(vendedor);
-
-				for (Lot lot : lots) {
+				List<Lot> aux = new LinkedList<Lot>(lots);
+				for (Lot lot : aux) {
 					// para cada lote empezamos la subasta
 					precio = lot.getPrecioInicio();
 					String puja;
@@ -330,6 +330,8 @@ public class FishMarketAgent extends POAAgent {
 									myAgent.send(respuesta);
 									
 									//TODO eliminar el pescado de la subasta y notificar al vendedor
+									lots.remove(lot);
+									vendedoresAID.put(vendedor, lots);
 									
 								} else {
 									fishMarket.getLogger().info("INFO", "Ningun comprador ha pujado");
