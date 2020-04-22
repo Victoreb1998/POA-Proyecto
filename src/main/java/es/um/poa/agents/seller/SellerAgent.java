@@ -9,8 +9,10 @@ import org.yaml.snakeyaml.Yaml;
 
 import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
+import es.um.poa.agents.fishmarket.FishMarketAgent;
 import es.um.poa.guis.FishSellerGui;
 import jade.core.AID;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -116,6 +118,44 @@ public class SellerAgent extends POAAgent {
 						}
 					}
 				});
+				seq.addSubBehaviour(new CyclicBehaviour() {
+					
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void action() {
+						
+						MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
+								ACLMessage.REQUEST, "PescadoVendidoProtocolo");
+						
+						ACLMessage msg = myAgent.receive(mt);
+						if (msg != null) {
+							String[] contenidos = msg.getContent().split(",");
+							Double precio = Double.valueOf(contenidos[0]);
+							String pescado = contenidos[1];
+							getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
+							//retiramos el dinero con probabilidad 1/2
+							if (Math.random() > 0.5) {
+								
+								ACLMessage rVendedor = new ACLMessage(ACLMessage.AGREE);
+								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+								rVendedor.setConversationId("SacarDineroProtocolo");
+								rVendedor.addReceiver(LonjaAgent);
+								myAgent.send(rVendedor);
+								
+								//TODO sumarse el dinero total acumulado en la lonja, falta controlar en la lonja
+								//cuanto dinero acumulado tiene cada vendedor
+								
+							} else {//no saca el dinero
+								ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);
+								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+								rVendedor.setConversationId("SacarDineroProtocolo");
+								rVendedor.addReceiver(LonjaAgent);
+								myAgent.send(rVendedor);
+							}
+						}
+					}
+				});
 				addBehaviour(seq);
 				/*protocolo para recepción de pago. El vendedor recibirá un inform dado
 				 * que antes le ha enviado un subscribe a la lonja //Despues extraerá el dinero
@@ -172,6 +212,8 @@ public class SellerAgent extends POAAgent {
 		return config;
 	}
    
+
+	
 	/*public void updateCatalogue(String name, Precio precio) {
 
 		addBehaviour(new OneShotBehaviour() {

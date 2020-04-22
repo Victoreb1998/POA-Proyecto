@@ -64,7 +64,7 @@ public class FishMarketAgent extends POAAgent {
 				addBehaviour(new DescubrirVendedor());
 				addBehaviour(new ComprobarComprador());
 				addBehaviour(new RecibirLot());
-				addBehaviour(new EnviarInfoSubasta(this,15000));
+				addBehaviour(new EnviarInfoSubasta(this, 15000));
 
 			} else {
 				doDelete();
@@ -270,10 +270,11 @@ public class FishMarketAgent extends POAAgent {
 		private static final long serialVersionUID = 1L;
 		private Boolean Parada;
 		float precio;
+
 		public EnviarInfoSubasta(Agent a, long period) {
 			super(a, period);
 			Parada = true;
-			precio=0;
+			precio = 0;
 
 		}
 
@@ -315,7 +316,8 @@ public class FishMarketAgent extends POAAgent {
 								ACLMessage msg = myAgent.receive(mt);
 								if (msg != null) {
 									AID ganador = msg.getSender();
-									fishMarket.getLogger().info("INFO", "El comprador ganador es: "+ ganador.getName());
+									fishMarket.getLogger().info("INFO",
+											"El comprador ganador es: " + ganador.getName());
 									Double dinero = compradoresAID.get(ganador);
 									dinero -= precio;
 									compradoresAID.put(ganador, dinero);
@@ -328,12 +330,43 @@ public class FishMarketAgent extends POAAgent {
 									respuesta.addReceiver(ganador);
 									respuesta.setContent(String.valueOf(precio));
 									myAgent.send(respuesta);
-									
-									//TODO eliminar el pescado de la subasta y notificar al vendedor
+
+									// eliminar el pescado de la subasta y notificar al vendedor
 									lots.remove(lot);
 									vendedoresAID.put(vendedor, lots);
-									System.out.println("commit");
-									
+									//TODO añadir al acumulado del dinero del vendedor
+									ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
+									rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+									rVendedor.setConversationId("PescadoVendidoProtocolo");
+									rVendedor.addReceiver(vendedor);
+									rVendedor.setContent(String.valueOf(precio) + "," + lot.getType());
+									myAgent.send(rVendedor);
+
+									myAgent.addBehaviour(new DelayBehaviour(myAgent, 500) {
+
+										private static final long serialVersionUID = 1L;
+
+										protected void handleElapsedTimeout() {
+
+											MessageTemplate mt = crearPlantilla(
+													FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REFUSE,
+													ACLMessage.AGREE, "SacarDineroProtocolo");
+											ACLMessage msg = myAgent.receive(mt);
+
+											if (msg != null) {
+												String protocolo = msg.getProtocol();
+												
+												if (protocolo.equals(ACLMessage.AGREE)) {
+													//TODO sacamos el dinero de la cuenta del cliente
+													
+												}
+											} else {
+												getLogger().info("INFO",
+														"Error, el cliente no ha contestado si quiere sacar el dinero o no");
+											}
+										}
+
+									});
 								} else {
 									fishMarket.getLogger().info("INFO", "Ningun comprador ha pujado");
 									precio -= precio / 10;

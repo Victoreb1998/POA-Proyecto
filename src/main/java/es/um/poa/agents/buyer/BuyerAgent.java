@@ -145,7 +145,7 @@ public class BuyerAgent extends POAAgent {
 		}
 		return config;
 	}
-
+	//TODO meterlo en la secuencia
 	private class DecidirPuja extends TickerBehaviour {
 
 		public DecidirPuja(Agent a, long period) {
