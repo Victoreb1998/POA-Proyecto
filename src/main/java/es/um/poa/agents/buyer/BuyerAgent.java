@@ -9,8 +9,10 @@ import org.yaml.snakeyaml.Yaml;
 
 import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
+import es.um.poa.agents.fishmarket.FishMarketAgent;
 import es.um.poa.guis.FishBuyerGui;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -68,7 +70,7 @@ public class BuyerAgent extends POAAgent {
 
 					}
 				});
-				//protocolo de inicio para registrar a un comprador
+				// protocolo de inicio para registrar a un comprador
 				seq.addSubBehaviour(new OneShotBehaviour() {
 
 					private static final long serialVersionUID = 1L;
@@ -88,20 +90,22 @@ public class BuyerAgent extends POAAgent {
 
 					}
 				});
-				//protocolo de inicio para abrir un credito, tiene que ser un waker behaviour pq tiene que suceder despues de 
-				//que se haya registrado el usuario, si no le ponemos aun que sea unas milesimas de tiempo de separacion recibira
-				//un mensaje nulo
+				// protocolo de inicio para abrir un credito, tiene que ser un waker behaviour
+				// pq tiene que suceder despues de
+				// que se haya registrado el usuario, si no le ponemos aun que sea unas
+				// milesimas de tiempo de separacion recibira
+				// un mensaje nulo
 				seq.addSubBehaviour(new DelayBehaviour(this, 500) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
-  
+
 					@Override
 					protected void handleElapsedTimeout() {
-						//recibimos la respuesta
+						// recibimos la respuesta
 						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
-							//si el comprador se ha podido registrar(INFORM) podrá abrir un credito
+							// si el comprador se ha podido registrar(INFORM) podrá abrir un credito
 							if (msg.getPerformative() == ACLMessage.INFORM) {
 								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
 								identificacion.addReceiver(LonjaAgent);
@@ -140,6 +144,62 @@ public class BuyerAgent extends POAAgent {
 			e.printStackTrace();
 		}
 		return config;
+	}
+
+	private class DecidirPuja extends TickerBehaviour {
+
+		public DecidirPuja(Agent a, long period) {
+			super(a, period);
+
+		}
+
+		@Override
+		protected void onTick() {
+			MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
+					ACLMessage.PROPOSE, "OfertaLonjaProtocolo");
+			ACLMessage msg = myAgent.receive(mt);
+
+			if (msg != null) {
+				String contenido = msg.getContent();
+				String[] contenidos = contenido.split(" ");
+				// Si buscamos el pez ofrecido
+				// if (targetFishName.contains(contenidos[1])) {
+				double precio = Double.valueOf(contenidos[2]);
+				// si tenemos dinero pujamos con una probabilidad del 30%
+				if (precio >= creditoDisponible && Math.random() > 0.7) {
+					getLogger().info("INFO", "Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
+					ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
+					respuesta.setConversationId("RespuestaOfertaProtocolo");
+					myAgent.send(respuesta);
+
+					myAgent.addBehaviour(new DelayBehaviour(myAgent, 100) {
+
+						/**
+						 * 
+						 */
+						private static final long serialVersionUID = 1L;
+
+						protected void handleElapsedTimeout() {
+							MessageTemplate mt = FishMarketAgent.crearPlantilla(
+									FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+									"OfertaAceptadaProtocolo");
+							ACLMessage msg = myAgent.receive(mt);
+
+							if (msg != null) {
+								Double pagado = Double.valueOf(msg.getContent());
+								creditoDisponible -= pagado;
+								//targetFishName.remove(contenidos[1]);
+							}
+						}
+					});
+					// }
+				}
+
+			}
+
+		}
+
 	}
 
 	public void anadirSaldo(double masSaldo) {

@@ -64,6 +64,7 @@ public class FishMarketAgent extends POAAgent {
 				addBehaviour(new DescubrirVendedor());
 				addBehaviour(new ComprobarComprador());
 				addBehaviour(new RecibirLot());
+				addBehaviour(new EnviarInfoSubasta(this,15000));
 
 			} else {
 				doDelete();
@@ -88,7 +89,7 @@ public class FishMarketAgent extends POAAgent {
 		return config;
 	}
 
-	private MessageTemplate crearPlantilla(String protocolo, int mensaje, String conversacion) {
+	public static MessageTemplate crearPlantilla(String protocolo, int mensaje, String conversacion) {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo),
 				MessageTemplate.MatchPerformative(mensaje));
 		MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
@@ -96,7 +97,7 @@ public class FishMarketAgent extends POAAgent {
 		return templateAddBuyerProtocol;
 	}
 
-	private MessageTemplate crearPlantilla(String protocolo, int mensaje1, int mensaje2, String conversacion) {
+	public MessageTemplate crearPlantilla(String protocolo, int mensaje1, int mensaje2, String conversacion) {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo), MessageTemplate
 				.or(MessageTemplate.MatchPerformative(mensaje1), MessageTemplate.MatchPerformative(mensaje2)));
 		MessageTemplate templateAddBuyerProtocol = MessageTemplate.and(mt,
@@ -263,6 +264,10 @@ public class FishMarketAgent extends POAAgent {
 	}
 
 	private class EnviarInfoSubasta extends TickerBehaviour {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private Boolean Parada;
 		float precio;
 		public EnviarInfoSubasta(Agent a, long period) {
@@ -310,6 +315,7 @@ public class FishMarketAgent extends POAAgent {
 								ACLMessage msg = myAgent.receive(mt);
 								if (msg != null) {
 									AID ganador = msg.getSender();
+									fishMarket.getLogger().info("INFO", "El comprador ganador es: "+ ganador.getName());
 									Double dinero = compradoresAID.get(ganador);
 									dinero -= precio;
 									compradoresAID.put(ganador, dinero);
@@ -323,6 +329,7 @@ public class FishMarketAgent extends POAAgent {
 									respuesta.setContent(String.valueOf(precio));
 									myAgent.send(respuesta);
 								} else {
+									fishMarket.getLogger().info("INFO", "Ningun comprador ha pujado");
 									precio -= precio / 10;
 								}
 
