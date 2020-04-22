@@ -5,3 +5,9 @@
 APDescription.txt
 target/
 MTPs-Main-Container.txt
+/.gitignore
+/README.md
+/configs/
+/logs/
+/pom.xml
+/src/

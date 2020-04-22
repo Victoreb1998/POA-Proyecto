@@ -7,12 +7,11 @@ import java.util.LinkedList;
 
 import org.yaml.snakeyaml.Yaml;
 
+import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishBuyerGui;
 import jade.core.AID;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -49,7 +48,7 @@ public class BuyerAgent extends POAAgent {
 				SequentialBehaviour seq = new SequentialBehaviour();
 				// No podemos dejar que el comprador busque a la lonja antes de que esta este
 				// registrada
-				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
 
@@ -92,7 +91,7 @@ public class BuyerAgent extends POAAgent {
 				//protocolo de inicio para abrir un credito, tiene que ser un waker behaviour pq tiene que suceder despues de 
 				//que se haya registrado el usuario, si no le ponemos aun que sea unas milesimas de tiempo de separacion recibira
 				//un mensaje nulo
-				seq.addSubBehaviour(new WakerBehaviour(this, 500) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 500) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
   

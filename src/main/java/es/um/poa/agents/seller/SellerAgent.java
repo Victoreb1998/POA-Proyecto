@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.yaml.snakeyaml.Yaml;
 
+import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.guis.FishSellerGui;
 import jade.core.AID;
@@ -45,7 +46,7 @@ public class SellerAgent extends POAAgent {
 				SequentialBehaviour seq = new SequentialBehaviour();
 				// No podemos dejar que el vendedor busque a la lonja antes de que esta este
 				// registrada
-				seq.addSubBehaviour(new WakerBehaviour(this, 10000) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
 
@@ -86,7 +87,7 @@ public class SellerAgent extends POAAgent {
 
 					}
 				});
-				seq.addSubBehaviour(new WakerBehaviour(this,500) {
+				seq.addSubBehaviour(new DelayBehaviour(this,500) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
