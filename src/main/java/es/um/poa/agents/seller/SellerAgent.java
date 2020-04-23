@@ -48,7 +48,7 @@ public class SellerAgent extends POAAgent {
 				SequentialBehaviour seq = new SequentialBehaviour();
 				// No podemos dejar que el vendedor busque a la lonja antes de que esta este
 				// registrada
-				seq.addSubBehaviour(new DelayBehaviour(this, 5000) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
 
@@ -89,7 +89,7 @@ public class SellerAgent extends POAAgent {
 
 					}
 				});
-				seq.addSubBehaviour(new DelayBehaviour(this,500) {
+				seq.addSubBehaviour(new DelayBehaviour(this,5000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 

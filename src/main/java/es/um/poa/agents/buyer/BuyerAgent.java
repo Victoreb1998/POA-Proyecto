@@ -95,7 +95,7 @@ public class BuyerAgent extends POAAgent {
 				// que se haya registrado el usuario, si no le ponemos aun que sea unas
 				// milesimas de tiempo de separacion recibira
 				// un mensaje nulo
-				seq.addSubBehaviour(new DelayBehaviour(this, 500) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 5000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
@@ -121,8 +121,9 @@ public class BuyerAgent extends POAAgent {
 						}
 					}
 				});
+				seq.addSubBehaviour(new DelayBehaviour(this,3000));
+				seq.addSubBehaviour(new DecidirPuja(this,3000));
 				addBehaviour(seq);
-				getLogger().info("INFO", "Peticion de saldo enviada");
 			} else {
 				doDelete();
 			}
@@ -145,39 +146,39 @@ public class BuyerAgent extends POAAgent {
 		}
 		return config;
 	}
-	//TODO meterlo en la secuencia
 	private class DecidirPuja extends TickerBehaviour {
 
 		public DecidirPuja(Agent a, long period) {
 			super(a, period);
-
+			// TODO Auto-generated constructor stub
 		}
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		protected void onTick() {
 			MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
 					ACLMessage.PROPOSE, "OfertaLonjaProtocolo");
 			ACLMessage msg = myAgent.receive(mt);
-
 			if (msg != null) {
 				String contenido = msg.getContent();
 				String[] contenidos = contenido.split(" ");
 				// Si buscamos el pez ofrecido
 				// if (targetFishName.contains(contenidos[1])) {
 				double precio = Double.valueOf(contenidos[2]);
-				// si tenemos dinero pujamos con una probabilidad del 30%
-				if (precio >= creditoDisponible && Math.random() > 0.7) {
+				if (precio <= creditoDisponible) {
 					getLogger().info("INFO", "Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
 					ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
 					respuesta.setConversationId("RespuestaOfertaProtocolo");
+					respuesta.addReceiver(LonjaAgent);
 					myAgent.send(respuesta);
 
-					myAgent.addBehaviour(new DelayBehaviour(myAgent, 100) {
+					/*myAgent.addBehaviour(new DelayBehaviour(myAgent, 100) {
 
-						/**
-						 * 
-						 */
 						private static final long serialVersionUID = 1L;
 
 						protected void handleElapsedTimeout() {
@@ -192,7 +193,7 @@ public class BuyerAgent extends POAAgent {
 								//targetFishName.remove(contenidos[1]);
 							}
 						}
-					});
+					});*/
 					// }
 				}
 
