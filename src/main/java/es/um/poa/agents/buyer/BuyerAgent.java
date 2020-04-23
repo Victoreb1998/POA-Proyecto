@@ -172,12 +172,9 @@ public class BuyerAgent extends POAAgent {
 
 		public DecidirPuja(Agent a, long period) {
 			super(a, period);
-			// TODO Auto-generated constructor stub
+			
 		}
 
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 
 		@Override
