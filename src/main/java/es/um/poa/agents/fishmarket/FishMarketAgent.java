@@ -304,6 +304,7 @@ public class FishMarketAgent extends POAAgent {
 				} else {
 					precio = 0;
 				}
+				
 				flag=1;
 				break;
 			case 1:
