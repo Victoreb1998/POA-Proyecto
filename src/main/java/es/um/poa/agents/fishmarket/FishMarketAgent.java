@@ -71,7 +71,7 @@ public class FishMarketAgent extends POAAgent {
 				addBehaviour(new RecibirLot());
 				SequentialBehaviour seq = new SequentialBehaviour();
 				seq.addSubBehaviour(new DelayBehaviour(this, 16000));
-				seq.addSubBehaviour(new Subasta(this,4000));
+				seq.addSubBehaviour(new Subasta(this, 4000));
 				addBehaviour(seq);
 			} else {
 				doDelete();
@@ -285,35 +285,39 @@ public class FishMarketAgent extends POAAgent {
 				ACLMessage identificacion = new ACLMessage(ACLMessage.PROPOSE);
 				identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
 				identificacion.setConversationId("OfertaLonjaProtocolo");
-				AID vendedor = vendedores.getFirst();
-				LinkedList<Lot> lotes = vendedoresAID.get(vendedor);
-				Lot lot = lotes.getFirst();
-				// añadimos como receptor a todos los compradores
-				for (AID aid : compradoresAID.keySet())
-					identificacion.addReceiver(aid);
-				// para cada lote empezamos la subasta
-				if (precio == 0)
-					
-					precio = lot.getPrecioInicio();
-				String puja;
-				float minimo = lot.getPrecioMin();
-				if (precio >= minimo) {
-					puja = lot.paraPuja(precio);
-					identificacion.setContent(puja);
-					getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
-					myAgent.send(identificacion);
-					
-				} else {
-					precio = 0;
+				if (!vendedores.isEmpty()) {
+					AID vendedor = vendedores.getFirst();
+					LinkedList<Lot> lotes = vendedoresAID.get(vendedor);
+					Lot lot = lotes.getFirst();
+					// añadimos como receptor a todos los compradores
+					for (AID aid : compradoresAID.keySet())
+						identificacion.addReceiver(aid);
+					// para cada lote empezamos la subasta
+					if (precio == 0)
+
+						precio = lot.getPrecioInicio();
+					String puja;
+					float minimo = lot.getPrecioMin();
+					if (precio >= minimo) {
+						puja = lot.paraPuja(precio);
+						identificacion.setContent(puja);
+						getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
+						myAgent.send(identificacion);
+
+					} else {
+						precio = 0;
+					}
+
+					flag = 1;
+				}else {
+					getLogger().info("INFO", "No hay mas lotes, la subasta se reiniciará si llegan mas lotes");
 				}
-				
-				flag=1;
 				break;
 			case 1:
 				MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
 						ACLMessage.ACCEPT_PROPOSAL, "RespuestaOfertaProtocolo");
 				ACLMessage msg = myAgent.receive(mt);
-				flag=0;
+				flag = 0;
 				if (msg != null) {
 					AID vendedoraux = vendedores.getFirst();
 					LinkedList<Lot> lotesaux = vendedoresAID.get(vendedoraux);
@@ -333,7 +337,11 @@ public class FishMarketAgent extends POAAgent {
 
 					// eliminar el pescado de la subasta y notificar al vendedor
 					lotesaux.remove(lotaux);
-					vendedoresAID.put(vendedoraux, lotesaux);
+					if (lotesaux.isEmpty()) {
+						vendedores.remove(vendedoraux);
+					} else {
+						vendedoresAID.put(vendedoraux, lotesaux);
+					}
 					// TODO añadir al acumulado del dinero del vendedor
 					/*
 					 * ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
