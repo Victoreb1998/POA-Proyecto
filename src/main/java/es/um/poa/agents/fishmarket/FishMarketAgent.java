@@ -274,7 +274,7 @@ public class FishMarketAgent extends POAAgent {
 	private class Subasta extends TickerBehaviour {
 		public Subasta(Agent a, long period) {
 			super(a, period);
-			// TODO Auto-generated constructor stub
+			
 		}
 
 		private static final long serialVersionUID = 1L;
