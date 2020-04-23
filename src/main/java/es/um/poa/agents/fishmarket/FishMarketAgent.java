@@ -243,6 +243,7 @@ public class FishMarketAgent extends POAAgent {
 				getLogger().info("INFO", getLocalName() + ": REQUEST to open a credit to a buyer received from "
 						+ msg.getSender().getLocalName());
 				ACLMessage reply = msg.createReply();
+				reply.setConversationId("RespuestaCredito");
 				// comprobamos si el comprador esta registrado
 				if (compradoresAID.containsKey(msg.getSender())) {
 

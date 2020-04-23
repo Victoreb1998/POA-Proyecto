@@ -112,8 +112,7 @@ public class BuyerAgent extends POAAgent {
 								identificacion.setContent(String.valueOf(dineroDisponible));
 								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								identificacion.setConversationId("OpenBuyerCreditProtocol");
-								creditoDisponible += dineroDisponible;
-								dineroDisponible = 0;
+								
 								myAgent.send(identificacion);
 							} else {
 								block();
@@ -121,7 +120,30 @@ public class BuyerAgent extends POAAgent {
 						}
 					}
 				});
-				seq.addSubBehaviour(new DelayBehaviour(this,3000));
+				seq.addSubBehaviour(new DelayBehaviour(this,3000) {
+
+					private static final long serialVersionUID = 1L;
+					
+					@Override
+					protected void handleElapsedTimeout() {
+						MessageTemplate mt = MessageTemplate.MatchConversationId("RespuestaCredito");
+						ACLMessage msg = myAgent.receive(mt);
+						
+						if (msg != null) {
+							if (msg.getPerformative() == ACLMessage.INFORM) {
+								creditoDisponible += dineroDisponible;
+								dineroDisponible = 0;
+								getLogger().info("INFO","El agente " + getName() + " recibe la confirmación de credito");
+							} else {
+								getLogger().info("INFO","El agente " + getName() + " no tiene el suficiente dinero");
+								doDelete();
+							}
+						} else {
+							getLogger().info("INFO","No se ha recibido respuesta del credito para el agente "+getName());
+							doDelete();
+						}
+					}
+				});
 				seq.addSubBehaviour(new DecidirPuja(this,3000));
 				addBehaviour(seq);
 			} else {
