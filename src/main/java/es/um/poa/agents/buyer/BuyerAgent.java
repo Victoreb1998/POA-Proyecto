@@ -188,7 +188,7 @@ public class BuyerAgent extends POAAgent {
 				// Si buscamos el pez ofrecido
 				// if (targetFishName.contains(contenidos[1])) {
 				double precio = Double.valueOf(contenidos[2]);
-				if (precio <= creditoDisponible) {
+				if (precio <= creditoDisponible && Math.random() > 0.5) {
 					getLogger().info("INFO", "Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
 					ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
