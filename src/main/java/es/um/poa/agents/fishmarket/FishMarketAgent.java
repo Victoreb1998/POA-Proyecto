@@ -293,6 +293,7 @@ public class FishMarketAgent extends POAAgent {
 					identificacion.addReceiver(aid);
 				// para cada lote empezamos la subasta
 				if (precio == 0)
+					
 					precio = lot.getPrecioInicio();
 				String puja;
 				float minimo = lot.getPrecioMin();
