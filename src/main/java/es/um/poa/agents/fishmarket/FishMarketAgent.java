@@ -302,6 +302,7 @@ public class FishMarketAgent extends POAAgent {
 					identificacion.setContent(puja);
 					getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
 					myAgent.send(identificacion);
+					
 				} else {
 					precio = 0;
 				}
