@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -16,10 +14,8 @@ import es.um.poa.agents.seller.Lot;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -295,21 +291,27 @@ public class FishMarketAgent extends POAAgent {
 						identificacion.addReceiver(aid);
 					// para cada lote empezamos la subasta
 					if (precio == 0)
-
-						precio = lot.getPrecioInicio();
+					precio = lot.getPrecioInicio();
 					String puja;
 					float minimo = lot.getPrecioMin();
 					if (precio >= minimo) {
 						puja = lot.paraPuja(precio);
 						identificacion.setContent(puja);
+						flag = 1;
 						getLogger().info("INFO", "Enviando puja " + puja + " a los compradores");
 						myAgent.send(identificacion);
 
 					} else {
+						//si la subasta sobrepasa el precio minimo la lonja se queda con el lote
+						getLogger().info("INFO", "La subasta ha llegado al precio minimo, se cancela este lote");
 						precio = 0;
+						lotes.remove(lot);
+						vendedoresAID.put(vendedor, lotes);
+						if(lotes.isEmpty()) {
+							vendedores.remove(vendedor);
+						}
 					}
 
-					flag = 1;
 				}else {
 					getLogger().info("INFO", "No hay mas lotes, la subasta se reiniciará si llegan mas lotes");
 				}
