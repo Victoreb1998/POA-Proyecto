@@ -31,6 +31,7 @@ public class BuyerAgent extends POAAgent {
 	private FishBuyerGui myGui;
 	// lonja conocida
 	private AID LonjaAgent;
+	private int ganador = 0;
 
 	public void setup() {
 		super.setup();
@@ -112,7 +113,7 @@ public class BuyerAgent extends POAAgent {
 								identificacion.setContent(String.valueOf(dineroDisponible));
 								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								identificacion.setConversationId("OpenBuyerCreditProtocol");
-								
+
 								myAgent.send(identificacion);
 							} else {
 								block();
@@ -120,31 +121,33 @@ public class BuyerAgent extends POAAgent {
 						}
 					}
 				});
-				seq.addSubBehaviour(new DelayBehaviour(this,3000) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 3000) {
 
 					private static final long serialVersionUID = 1L;
-					
+
 					@Override
 					protected void handleElapsedTimeout() {
 						MessageTemplate mt = MessageTemplate.MatchConversationId("RespuestaCredito");
 						ACLMessage msg = myAgent.receive(mt);
-						
+
 						if (msg != null) {
 							if (msg.getPerformative() == ACLMessage.INFORM) {
 								creditoDisponible += dineroDisponible;
 								dineroDisponible = 0;
-								getLogger().info("INFO","El agente " + getName() + " recibe la confirmación de credito");
+								getLogger().info("INFO",
+										"El agente " + getName() + " recibe la confirmación de credito");
 							} else {
-								getLogger().info("INFO","El agente " + getName() + " no tiene el suficiente dinero");
+								getLogger().info("INFO", "El agente " + getName() + " no tiene el suficiente dinero");
 								doDelete();
 							}
 						} else {
-							getLogger().info("INFO","No se ha recibido respuesta del credito para el agente "+getName());
+							getLogger().info("INFO",
+									"No se ha recibido respuesta del credito para el agente " + getName());
 							doDelete();
 						}
 					}
 				});
-				seq.addSubBehaviour(new DecidirPuja(this,3000));
+				seq.addSubBehaviour(new DecidirPuja(this, 3000));
 				addBehaviour(seq);
 			} else {
 				doDelete();
@@ -168,56 +171,58 @@ public class BuyerAgent extends POAAgent {
 		}
 		return config;
 	}
+
 	private class DecidirPuja extends TickerBehaviour {
 
 		public DecidirPuja(Agent a, long period) {
 			super(a, period);
-			
+
 		}
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		protected void onTick() {
-			MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
-					ACLMessage.PROPOSE, "OfertaLonjaProtocolo");
-			ACLMessage msg = myAgent.receive(mt);
-			if (msg != null) {
-				String contenido = msg.getContent();
-				String[] contenidos = contenido.split(" ");
-				// Si buscamos el pez ofrecido
-				// if (targetFishName.contains(contenidos[1])) {
-				double precio = Double.valueOf(contenidos[2]);
-				if (precio <= creditoDisponible && Math.random() > 0.5) {
-					getLogger().info("INFO", "Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
-					ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-					respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
-					respuesta.setConversationId("RespuestaOfertaProtocolo");
-					respuesta.addReceiver(LonjaAgent);
-					myAgent.send(respuesta);
+			switch (ganador) {
+			case 0:
+				MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
+						ACLMessage.PROPOSE, "OfertaLonjaProtocolo");
+				ACLMessage msg = myAgent.receive(mt);
+				if (msg != null) {
+					String contenido = msg.getContent();
+					String[] contenidos = contenido.split(" ");
+					// Si buscamos el pez ofrecido
+					// if (targetFishName.contains(contenidos[1])) {
+					double precio = Double.valueOf(contenidos[2]);
+					if (precio <= creditoDisponible && Math.random() > 0.5) {
+						getLogger().info("INFO",
+								"Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
+						ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+						respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
+						respuesta.setConversationId("RespuestaOfertaProtocolo");
+						respuesta.addReceiver(LonjaAgent);
+						ganador = 1;
+						myAgent.send(respuesta);
 
-					/*myAgent.addBehaviour(new DelayBehaviour(myAgent, 100) {
+					}
 
-						private static final long serialVersionUID = 1L;
+				}
+				break;
+			case 1:
 
-						protected void handleElapsedTimeout() {
-							MessageTemplate mt = FishMarketAgent.crearPlantilla(
-									FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
-									"OfertaAceptadaProtocolo");
-							ACLMessage msg = myAgent.receive(mt);
-
-							if (msg != null) {
-								Double pagado = Double.valueOf(msg.getContent());
-								creditoDisponible -= pagado;
-								//targetFishName.remove(contenidos[1]);
-							}
-						}
-					});*/
-					// }
+				MessageTemplate plantilla = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
+						ACLMessage.REQUEST, "OfertaAceptadaProtocolo");
+				ACLMessage msgaux = myAgent.receive(plantilla);
+				ganador=0;
+				if (msgaux != null) {
+					Double pagado = Double.valueOf(msgaux.getContent());
+					creditoDisponible -= pagado;
+					getLogger().info("INFO",
+							"Agente: " + myAgent.getName() + "ha sido el ganador, decrementando dinero");
+					// targetFishName.remove(contenidos[1]);
 				}
 
 			}
-
 		}
 
 	}
