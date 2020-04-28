@@ -147,7 +147,10 @@ public class BuyerAgent extends POAAgent {
 						}
 					}
 				});
-				seq.addSubBehaviour(new DecidirPuja(this, 3000));
+				seq.addSubBehaviour(new DecidirPuja(this, 4000));
+				seq.addSubBehaviour(new DelayBehaviour(this, 4000));
+				
+
 				addBehaviour(seq);
 			} else {
 				doDelete();
@@ -195,13 +198,13 @@ public class BuyerAgent extends POAAgent {
 					// if (targetFishName.contains(contenidos[1])) {
 					double precio = Double.valueOf(contenidos[2]);
 					if (precio <= creditoDisponible && Math.random() > 0.5) {
+						ganador=1;
 						getLogger().info("INFO",
 								"Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
 						ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 						respuesta.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
 						respuesta.setConversationId("RespuestaOfertaProtocolo");
 						respuesta.addReceiver(LonjaAgent);
-						ganador = 1;
 						myAgent.send(respuesta);
 
 					}
@@ -209,11 +212,11 @@ public class BuyerAgent extends POAAgent {
 				}
 				break;
 			case 1:
-
-				MessageTemplate plantilla = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
-						ACLMessage.REQUEST, "OfertaAceptadaProtocolo");
+				MessageTemplate plantilla = FishMarketAgent.crearPlantilla(
+						FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
+						"OfertaAceptadaProtocolo");
 				ACLMessage msgaux = myAgent.receive(plantilla);
-				ganador=0;
+				ganador = 0;
 				if (msgaux != null) {
 					Double pagado = Double.valueOf(msgaux.getContent());
 					creditoDisponible -= pagado;
@@ -221,10 +224,10 @@ public class BuyerAgent extends POAAgent {
 							"Agente: " + myAgent.getName() + "ha sido el ganador, decrementando dinero");
 					// targetFishName.remove(contenidos[1]);
 				}
+				break;
 
 			}
 		}
-
 	}
 
 	public void anadirSaldo(double masSaldo) {
