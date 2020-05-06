@@ -125,13 +125,19 @@ public class FishMarketAgent extends POAAgent {
 			if (msg != null) {
 				getLogger().info("INFO",
 						getLocalName() + ": REQUEST to admit a buyer received from " + msg.getSender().getLocalName());
-				compradoresAID.put(msg.getSender(), new Double(0));
-				getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
-						+ msg.getSender().getLocalName() + " [AddBuyerProtocol]");
-				ACLMessage reply = msg.createReply();
-				reply.setConversationId("RegistroCorrecto");
-				reply.setPerformative(ACLMessage.INFORM);
-				myAgent.send(reply);
+				if (compradoresAID.put(msg.getSender(), new Double(0)) != null) {
+					getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
+							+ msg.getSender().getLocalName() + " [AddBuyerProtocol]");
+					ACLMessage reply = msg.createReply();
+					reply.setConversationId("RegistroCorrecto");
+					reply.setPerformative(ACLMessage.AGREE);
+					myAgent.send(reply);
+				} else {
+					ACLMessage reply = msg.createReply();
+					reply.setConversationId("RegistroCorrecto");
+					reply.setPerformative(ACLMessage.REFUSE);
+					myAgent.send(reply);
+				}
 			}
 
 		}
@@ -139,8 +145,9 @@ public class FishMarketAgent extends POAAgent {
 	}
 
 	private class DescubrirVendedor extends CyclicBehaviour {
-		
+
 		private static final long serialVersionUID = 1L;
+
 		@Override
 		public void action() {
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
@@ -154,14 +161,21 @@ public class FishMarketAgent extends POAAgent {
 			if (msg != null) {
 				getLogger().info("INFO",
 						getLocalName() + ": REQUEST to admit a seller received from " + msg.getSender().getLocalName());
-				vendedoresAID.put(msg.getSender(), new LinkedList<Lot>());
-				vendedores.add(msg.getSender());
-				getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
-						+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
-				ACLMessage reply = msg.createReply();
-				reply.setConversationId("RegistroCorrecto");
-				reply.setPerformative(ACLMessage.INFORM);
-				myAgent.send(reply);
+				if (vendedoresAID.put(msg.getSender(), new LinkedList<Lot>()) != null) {
+					vendedores.add(msg.getSender());
+					getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
+							+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
+					ACLMessage reply = msg.createReply();
+					reply.setConversationId("RegistroCorrecto");
+					reply.setPerformative(ACLMessage.AGREE);
+					myAgent.send(reply);
+				} else {
+					ACLMessage reply = msg.createReply();
+					reply.setConversationId("RegistroCorrecto");
+					reply.setPerformative(ACLMessage.REFUSE);
+					myAgent.send(reply);
+
+				}
 			}
 
 		}
@@ -271,7 +285,7 @@ public class FishMarketAgent extends POAAgent {
 	private class Subasta extends TickerBehaviour {
 		public Subasta(Agent a, long period) {
 			super(a, period);
-			
+
 		}
 
 		private static final long serialVersionUID = 1L;
@@ -292,7 +306,7 @@ public class FishMarketAgent extends POAAgent {
 						identificacion.addReceiver(aid);
 					// para cada lote empezamos la subasta
 					if (precio == 0)
-					precio = lot.getPrecioInicio();
+						precio = lot.getPrecioInicio();
 					String puja;
 					float minimo = lot.getPrecioMin();
 					if (precio >= minimo) {
@@ -303,17 +317,17 @@ public class FishMarketAgent extends POAAgent {
 						myAgent.send(identificacion);
 
 					} else {
-						//si la subasta sobrepasa el precio minimo la lonja se queda con el lote
+						// si la subasta sobrepasa el precio minimo la lonja se queda con el lote
 						getLogger().info("INFO", "La subasta ha llegado al precio minimo, se cancela este lote");
 						precio = 0;
 						lotes.remove(lot);
 						vendedoresAID.put(vendedor, lotes);
-						if(lotes.isEmpty()) {
+						if (lotes.isEmpty()) {
 							vendedores.remove(vendedor);
 						}
 					}
 
-				}else {
+				} else {
 					getLogger().info("INFO", "No hay mas lotes, la subasta se reiniciará si llegan mas lotes");
 				}
 				break;

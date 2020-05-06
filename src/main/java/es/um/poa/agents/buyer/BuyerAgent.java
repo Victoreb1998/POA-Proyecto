@@ -106,8 +106,8 @@ public class BuyerAgent extends POAAgent {
 						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
-							// si el comprador se ha podido registrar(INFORM) podrá abrir un credito
-							if (msg.getPerformative() == ACLMessage.INFORM) {
+							// si el comprador se ha podido registrar(AGREE) podrá abrir un credito
+							if (msg.getPerformative() == ACLMessage.AGREE) {
 								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
 								identificacion.addReceiver(LonjaAgent);
 								identificacion.setContent(String.valueOf(dineroDisponible));
