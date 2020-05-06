@@ -133,6 +133,9 @@ public class FishMarketAgent extends POAAgent {
 					reply.setPerformative(ACLMessage.AGREE);
 					myAgent.send(reply);
 				} else {
+					//Entra aqui cuando el objeto ya esta en el mapa
+					getLogger().info("INFO",
+							getLocalName() + ": El comprador " + msg.getSender().getLocalName()+" ya esta registrado");
 					ACLMessage reply = msg.createReply();
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.REFUSE);
@@ -169,7 +172,10 @@ public class FishMarketAgent extends POAAgent {
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.AGREE);
 					myAgent.send(reply);
+					//Entra aqui cuando el objeto ya esta en el mapa
 				} else {
+					getLogger().info("INFO",
+							getLocalName() + ": El vendedor " + msg.getSender().getLocalName()+" ya esta registrado");
 					ACLMessage reply = msg.createReply();
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.REFUSE);
