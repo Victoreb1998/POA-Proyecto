@@ -33,6 +33,7 @@ public class FishMarketAgent extends POAAgent {
 	private HashMap<AID, Double> compradoresAID;
 	private HashMap<AID, LinkedList<Lot>> vendedoresAID;
 	private LinkedList<AID> vendedores;
+	private HashMap<AID, Float> dineroVendedores;
 	private float precio = 0;
 	private int flag = 0;
 
@@ -48,6 +49,7 @@ public class FishMarketAgent extends POAAgent {
 				compradoresAID = new HashMap<AID, Double>();
 				vendedoresAID = new HashMap<AID, LinkedList<Lot>>();
 				vendedores = new LinkedList<AID>();
+				dineroVendedores = new HashMap<AID, Float>();
 				// Registrar el servicio en las paginas amarillas
 				DFAgentDescription dfd = new DFAgentDescription();
 				dfd.setName(getAID());
@@ -133,9 +135,9 @@ public class FishMarketAgent extends POAAgent {
 					reply.setPerformative(ACLMessage.AGREE);
 					myAgent.send(reply);
 				} else {
-					//Entra aqui cuando el objeto ya esta en el mapa
-					getLogger().info("INFO",
-							getLocalName() + ": El comprador " + msg.getSender().getLocalName()+" ya esta registrado");
+					// Entra aqui cuando el objeto ya esta en el mapa
+					getLogger().info("INFO", getLocalName() + ": El comprador " + msg.getSender().getLocalName()
+							+ " ya esta registrado");
 					ACLMessage reply = msg.createReply();
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.REFUSE);
@@ -172,10 +174,12 @@ public class FishMarketAgent extends POAAgent {
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.AGREE);
 					myAgent.send(reply);
-					//Entra aqui cuando el objeto ya esta en el mapa
+
+					dineroVendedores.put(msg.getSender(), new Float(0));
+					// Entra aqui cuando el objeto ya esta en el mapa
 				} else {
 					getLogger().info("INFO",
-							getLocalName() + ": El vendedor " + msg.getSender().getLocalName()+" ya esta registrado");
+							getLocalName() + ": El vendedor " + msg.getSender().getLocalName() + " ya esta registrado");
 					ACLMessage reply = msg.createReply();
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.REFUSE);
@@ -359,6 +363,10 @@ public class FishMarketAgent extends POAAgent {
 					respuesta.setContent(String.valueOf(precio));
 					myAgent.send(respuesta);
 
+					Float ganancia = precio;
+					ganancia += dineroVendedores.get(vendedoraux);
+					dineroVendedores.put(vendedoraux, ganancia);
+
 					// eliminar el pescado de la subasta y notificar al vendedor
 					lotesaux.remove(lotaux);
 					if (lotesaux.isEmpty()) {
@@ -366,35 +374,41 @@ public class FishMarketAgent extends POAAgent {
 					} else {
 						vendedoresAID.put(vendedoraux, lotesaux);
 					}
-					// TODO añadir al acumulado del dinero del vendedor
-					/*
-					 * ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
-					 * rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-					 * rVendedor.setConversationId("PescadoVendidoProtocolo");
-					 * rVendedor.addReceiver(vendedor); rVendedor.setContent(String.valueOf(precio)
-					 * + "," + lot.getType()); myAgent.send(rVendedor);
-					 * 
-					 * myAgent.addBehaviour(new DelayBehaviour(myAgent, 500) {
-					 * 
-					 * private static final long serialVersionUID = 1L;
-					 * 
-					 * protected void handleElapsedTimeout() {
-					 * 
-					 * MessageTemplate mt =
-					 * crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REFUSE,
-					 * ACLMessage.AGREE, "SacarDineroProtocolo"); ACLMessage msg =
-					 * myAgent.receive(mt);
-					 * 
-					 * if (msg != null) { String protocolo = msg.getProtocol();
-					 * 
-					 * if (protocolo.equals(ACLMessage.AGREE)) { // TODO sacamos el dinero de la
-					 * cuenta del cliente
-					 * 
-					 * } } else { getLogger().info("INFO",
-					 * "Error, el cliente no ha contestado si quiere sacar el dinero o no"); } }
-					 * 
-					 * });
-					 */
+
+					ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
+					rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					rVendedor.setConversationId("PescadoVendidoProtocolo");
+					rVendedor.addReceiver(vendedoraux);
+					rVendedor.setContent(String.valueOf(precio) + "," + lotaux.getType());
+					myAgent.send(rVendedor);
+
+					myAgent.addBehaviour(new DelayBehaviour(myAgent, 500) {
+
+						private static final long serialVersionUID = 1L;
+
+						protected void handleElapsedTimeout() {
+
+							MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
+									ACLMessage.REFUSE, ACLMessage.AGREE, "SacarDineroProtocolo");
+							ACLMessage msg = myAgent.receive(mt);
+
+							if (msg != null) {
+								String protocolo = msg.getProtocol();
+
+								if (protocolo.equals(ACLMessage.AGREE)) {
+									dineroVendedores.put(vendedoraux, new Float(0));
+									//logger
+								} else {
+									//logger
+								}
+							} else {
+								getLogger().info("INFO",
+										"Error, el cliente no ha contestado si quiere sacar el dinero o no");
+							}
+						}
+
+					});
+
 				} else {
 					getLogger().info("INFO", "Ningun comprador ha pujado");
 					precio -= precio / 10;

@@ -141,10 +141,11 @@ public class SellerAgent extends POAAgent {
 								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								rVendedor.setConversationId("SacarDineroProtocolo");
 								rVendedor.addReceiver(LonjaAgent);
+								Float ganancias = Float.valueOf(rVendedor.getContent());
 								myAgent.send(rVendedor);
 								
-								//TODO sumarse el dinero total acumulado en la lonja, falta controlar en la lonja
-								//cuanto dinero acumulado tiene cada vendedor
+								dinero += ganancias;
+								getLogger().info("INFO", "El agente " + getName() + " retira el dinero");
 								
 							} else {//no saca el dinero
 								ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);
@@ -152,6 +153,7 @@ public class SellerAgent extends POAAgent {
 								rVendedor.setConversationId("SacarDineroProtocolo");
 								rVendedor.addReceiver(LonjaAgent);
 								myAgent.send(rVendedor);
+								getLogger().info("INFO", "El agente " + getName() + " NO retira el dinero");
 							}
 						}
 					}
