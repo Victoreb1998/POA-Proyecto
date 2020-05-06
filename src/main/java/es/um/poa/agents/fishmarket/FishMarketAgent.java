@@ -14,7 +14,6 @@ import es.um.poa.agents.seller.Lot;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
@@ -168,14 +167,13 @@ public class FishMarketAgent extends POAAgent {
 						getLocalName() + ": REQUEST to admit a seller received from " + msg.getSender().getLocalName());
 				if (vendedoresAID.put(msg.getSender(), new LinkedList<Lot>()) == null) {
 					vendedores.add(msg.getSender());
+					dineroVendedores.put(msg.getSender(), new Float(0));
 					getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
 							+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
 					ACLMessage reply = msg.createReply();
 					reply.setConversationId("RegistroCorrecto");
 					reply.setPerformative(ACLMessage.AGREE);
 					myAgent.send(reply);
-
-					dineroVendedores.put(msg.getSender(), new Float(0));
 					// Entra aqui cuando el objeto ya esta en el mapa
 				} else {
 					getLogger().info("INFO",
@@ -302,13 +300,17 @@ public class FishMarketAgent extends POAAgent {
 
 		@Override
 		protected void onTick() {
+			MessageTemplate mt = null;
+			ACLMessage msg = null;
+			AID vendedor = null;
+			float dineroPescador = 0;
 			switch (flag) {
 			case 0:
 				ACLMessage identificacion = new ACLMessage(ACLMessage.PROPOSE);
 				identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE);
 				identificacion.setConversationId("OfertaLonjaProtocolo");
 				if (!vendedores.isEmpty()) {
-					AID vendedor = vendedores.getFirst();
+					vendedor = vendedores.getFirst();
 					LinkedList<Lot> lotes = vendedoresAID.get(vendedor);
 					Lot lot = lotes.getFirst();
 					// añadimos como receptor a todos los compradores
@@ -342,18 +344,19 @@ public class FishMarketAgent extends POAAgent {
 				}
 				break;
 			case 1:
-				MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE,
-						ACLMessage.ACCEPT_PROPOSAL, "RespuestaOfertaProtocolo");
-				ACLMessage msg = myAgent.receive(mt);
-				flag = 0;
+				mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_PROPOSE, ACLMessage.ACCEPT_PROPOSAL,
+						"RespuestaOfertaProtocolo");
+				msg = myAgent.receive(mt);
 				if (msg != null) {
-					AID vendedoraux = vendedores.getFirst();
-					LinkedList<Lot> lotesaux = vendedoresAID.get(vendedoraux);
+					flag = 2;
+					vendedor = vendedores.getFirst();
+					LinkedList<Lot> lotesaux = vendedoresAID.get(vendedor);
 					Lot lotaux = lotesaux.getFirst();
 					AID ganador = msg.getSender();
 					getLogger().info("INFO", "El comprador ganador es: " + ganador.getName());
 					Double dinero = compradoresAID.get(ganador);
 					dinero -= precio;
+					dineroPescador = precio;
 					compradoresAID.put(ganador, dinero);
 					// informar al comprador que ha ganado
 					ACLMessage respuesta = new ACLMessage(ACLMessage.REQUEST);
@@ -364,58 +367,54 @@ public class FishMarketAgent extends POAAgent {
 					myAgent.send(respuesta);
 
 					Float ganancia = precio;
-					ganancia += dineroVendedores.get(vendedoraux);
-					dineroVendedores.put(vendedoraux, ganancia);
+					ganancia += dineroVendedores.get(vendedor);
+					dineroVendedores.put(vendedor, ganancia);
 
-					// eliminar el pescado de la subasta y notificar al vendedor
-					lotesaux.remove(lotaux);
-					if (lotesaux.isEmpty()) {
-						vendedores.remove(vendedoraux);
-					} else {
-						vendedoresAID.put(vendedoraux, lotesaux);
-					}
+					//notificar al vendedor
+					
 
 					ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
 					rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 					rVendedor.setConversationId("PescadoVendidoProtocolo");
-					rVendedor.addReceiver(vendedoraux);
+					rVendedor.addReceiver(vendedor);
 					rVendedor.setContent(String.valueOf(precio) + "," + lotaux.getType());
 					myAgent.send(rVendedor);
-
-					myAgent.addBehaviour(new DelayBehaviour(myAgent, 500) {
-
-						private static final long serialVersionUID = 1L;
-
-						protected void handleElapsedTimeout() {
-
-							MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
-									ACLMessage.REFUSE, ACLMessage.AGREE, "SacarDineroProtocolo");
-							ACLMessage msg = myAgent.receive(mt);
-
-							if (msg != null) {
-								String protocolo = msg.getProtocol();
-
-								if (protocolo.equals(ACLMessage.AGREE)) {
-									dineroVendedores.put(vendedoraux, new Float(0));
-									//logger
-								} else {
-									//logger
-								}
-							} else {
-								getLogger().info("INFO",
-										"Error, el cliente no ha contestado si quiere sacar el dinero o no");
-							}
-						}
-
-					});
-
 				} else {
+					flag = 0;
 					getLogger().info("INFO", "Ningun comprador ha pujado");
 					precio -= precio / 10;
 				}
-
+				break;
+			case 2:
+				flag = 0;
+				mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REFUSE, ACLMessage.AGREE,
+						"SacarDineroProtocolo");
+				msg = myAgent.receive(mt);
+				if (msg != null) {
+					int protocolo = msg.getPerformative();
+					vendedor = vendedores.getFirst();
+					LinkedList<Lot> lotesaux = vendedoresAID.get(vendedor);
+					Lot lotaux = lotesaux.getFirst();
+					lotesaux.remove(lotaux);
+					if (lotesaux.isEmpty()) {
+						vendedores.remove(vendedor);
+					} else {
+						vendedoresAID.put(vendedor, lotesaux);
+					}
+					if (protocolo == ACLMessage.AGREE) {
+						float dinero = dineroVendedores.get(vendedor);
+						dineroVendedores.put(vendedor, new Float(0));
+						getLogger().info("INFO", "INFO, el vendedor saca " + dinero+dineroPescador);
+					} else {
+						float dinero = dineroVendedores.get(vendedor);
+						dineroVendedores.put(vendedor, dinero + dineroPescador);
+						getLogger().info("INFO", "INFO, el vendedor decide no sacar el dinero");
+					}
+				} else {
+					getLogger().info("INFO", "Error, el vendedor no ha contestado si quiere sacar el dinero o no");
+				}
 			}
+
 		}
 	}
-
 }

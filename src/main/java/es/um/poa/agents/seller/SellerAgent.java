@@ -10,12 +10,11 @@ import org.yaml.snakeyaml.Yaml;
 import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.agents.fishmarket.FishMarketAgent;
-import es.um.poa.guis.FishSellerGui;
+
 import jade.core.AID;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -29,9 +28,9 @@ public class SellerAgent extends POAAgent {
 	private static final long serialVersionUID = 1L;
 	// duda precio minimo
 	private List<Lot> catalogue;
-	private FishSellerGui myGui;
+	
 	private AID LonjaAgent;
-	private int dinero = 0;
+	private int dinero = 0; 
 
 	public void setup() {
 		super.setup();
@@ -118,12 +117,13 @@ public class SellerAgent extends POAAgent {
 						}
 					}
 				});
-				seq.addSubBehaviour(new CyclicBehaviour() {
+				seq.addSubBehaviour(new DelayBehaviour(this, 3000));
+				seq.addSubBehaviour(new TickerBehaviour(this,4000) {
 					
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void action() {
+					protected void onTick() {
 						
 						MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
 								ACLMessage.REQUEST, "PescadoVendidoProtocolo");
@@ -131,7 +131,7 @@ public class SellerAgent extends POAAgent {
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
 							String[] contenidos = msg.getContent().split(",");
-							Double precio = Double.valueOf(contenidos[0]);
+							Float precio = Float.valueOf(contenidos[0]);
 							String pescado = contenidos[1];
 							getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
 							//retiramos el dinero con probabilidad 1/2
@@ -141,12 +141,11 @@ public class SellerAgent extends POAAgent {
 								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								rVendedor.setConversationId("SacarDineroProtocolo");
 								rVendedor.addReceiver(LonjaAgent);
-								Float ganancias = Float.valueOf(rVendedor.getContent());
+			
 								myAgent.send(rVendedor);
 								
-								dinero += ganancias;
+								dinero += precio;
 								getLogger().info("INFO", "El agente " + getName() + " retira el dinero");
-								
 							} else {//no saca el dinero
 								ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);
 								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
@@ -159,38 +158,6 @@ public class SellerAgent extends POAAgent {
 					}
 				});
 				addBehaviour(seq);
-				/*protocolo para recepción de pago. El vendedor recibirá un inform dado
-				 * que antes le ha enviado un subscribe a la lonja //Despues extraerá el dinero
-				 * que tiene que venir en el inform y lo sumará a su cuenta //solo se debe pagar
-				 * al vendedor cuando lo decida la lonja //Es decir podemos ir pagando cada vez
-				 * que se venda un pescado o directamente cuando termine la subasta //En las
-				 * diapositivas pone que podemos ignorar intentos de pago para que el vendedor
-				 * decida cuando vaciar su cuenta pero no le veo mucho //sentido, sería mejor
-				 * vaciarla al final. Pero si quieres simplemente seria poner un if, poner el
-				 * dinero a 0 y sumar el pago despues seq.addSubBehaviour(new CyclicBehaviour()
-				 * {
-				 * 
-				 * 
-				 * private static final long serialVersionUID = 1L;
-				 * 
-				 * @Override public void action() { MessageTemplate mt =
-				 * MessageTemplate.MatchPerformative(ACLMessage.INFORM); ACLMessage msg =
-				 * myAgent.receive(mt); if (msg != null) { //Algo asi seria lo de ignorar para
-				 * retirar dinero, o eso entiendo yo, si no simplemente sería que la lonja avise
-				 * al terminar //y retiramos el dinero /*if(dinero>9999) { dinero=0; } int price
-				 * = Integer.parseInt(msg.getContent()); dinero+=price; }
-				 * 
-				 * } });
-				 * 
-				 * addBehaviour(seq);
-				 * 
-				 * // Estos casi seguro que sobran, dado que el vendedor no se ofrece
-				 * directamente a los compradores, sino a la lonja //addBehaviour(new
-				 * OfferRequestsServer()); //addBehaviour(new PurchaseOrdersServer());
-				 * 
-				 * // Creo y muestro la GUI myGui = new FishSellerGui(this); myGui.showGui();
-				 */
-
 			} else {
 				doDelete();
 			}
@@ -213,20 +180,4 @@ public class SellerAgent extends POAAgent {
 		}
 		return config;
 	}
-   
-
-	
-	/*public void updateCatalogue(String name, Precio precio) {
-
-		addBehaviour(new OneShotBehaviour() {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void action() {
-				//catalogue.put(name, precio);
-
-			}
-		});
-	}*/
 }

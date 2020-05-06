@@ -10,7 +10,6 @@ import org.yaml.snakeyaml.Yaml;
 import behaviours.DelayBehaviour;
 import es.um.poa.agents.POAAgent;
 import es.um.poa.agents.fishmarket.FishMarketAgent;
-import es.um.poa.guis.FishBuyerGui;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -28,7 +27,7 @@ public class BuyerAgent extends POAAgent {
 	private LinkedList<String> targetFishName;
 	private double dineroDisponible; // dinero del comprador
 	private double creditoDisponible = 0; // credito en la lonja
-	private FishBuyerGui myGui;
+
 	// lonja conocida
 	private AID LonjaAgent;
 	private int ganador = 0;
@@ -148,9 +147,6 @@ public class BuyerAgent extends POAAgent {
 					}
 				});
 				seq.addSubBehaviour(new DecidirPuja(this, 4000));
-				seq.addSubBehaviour(new DelayBehaviour(this, 4000));
-				
-
 				addBehaviour(seq);
 			} else {
 				doDelete();
