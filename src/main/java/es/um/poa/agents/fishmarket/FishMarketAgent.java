@@ -14,6 +14,7 @@ import es.um.poa.agents.seller.Lot;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
@@ -108,7 +109,7 @@ public class FishMarketAgent extends POAAgent {
 		return templateAddBuyerProtocol;
 	}
 
-	private class DescubrirComprador extends CyclicBehaviour {
+	private class DescubrirComprador extends OneShotBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -137,7 +138,7 @@ public class FishMarketAgent extends POAAgent {
 
 	}
 
-	private class DescubrirVendedor extends CyclicBehaviour {
+	private class DescubrirVendedor extends OneShotBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
