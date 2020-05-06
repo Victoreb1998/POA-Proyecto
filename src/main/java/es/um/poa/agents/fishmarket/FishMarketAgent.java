@@ -109,7 +109,7 @@ public class FishMarketAgent extends POAAgent {
 		return templateAddBuyerProtocol;
 	}
 
-	private class DescubrirComprador extends OneShotBehaviour {
+	private class DescubrirComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -138,9 +138,9 @@ public class FishMarketAgent extends POAAgent {
 
 	}
 
-	private class DescubrirVendedor extends OneShotBehaviour {
+	private class DescubrirVendedor extends CyclicBehaviour {
+		
 		private static final long serialVersionUID = 1L;
-
 		@Override
 		public void action() {
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
