@@ -125,7 +125,7 @@ public class FishMarketAgent extends POAAgent {
 			if (msg != null) {
 				getLogger().info("INFO",
 						getLocalName() + ": REQUEST to admit a buyer received from " + msg.getSender().getLocalName());
-				if (compradoresAID.put(msg.getSender(), new Double(0)) != null) {
+				if (compradoresAID.put(msg.getSender(), new Double(0)) == null) {
 					getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
 							+ msg.getSender().getLocalName() + " [AddBuyerProtocol]");
 					ACLMessage reply = msg.createReply();
@@ -161,7 +161,7 @@ public class FishMarketAgent extends POAAgent {
 			if (msg != null) {
 				getLogger().info("INFO",
 						getLocalName() + ": REQUEST to admit a seller received from " + msg.getSender().getLocalName());
-				if (vendedoresAID.put(msg.getSender(), new LinkedList<Lot>()) != null) {
+				if (vendedoresAID.put(msg.getSender(), new LinkedList<Lot>()) == null) {
 					vendedores.add(msg.getSender());
 					getLogger().info("INFO", getLocalName() + ": Action successfully performed for "
 							+ msg.getSender().getLocalName() + " [AddSellerProtocol]");
