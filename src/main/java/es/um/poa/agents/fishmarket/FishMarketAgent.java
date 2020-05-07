@@ -337,6 +337,12 @@ public class FishMarketAgent extends POAAgent {
 						if (lotes.isEmpty()) {
 							vendedores.remove(vendedor);
 						}
+						ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
+						rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						rVendedor.setConversationId("PescadoVendidoProtocolo");
+						rVendedor.addReceiver(vendedor);
+						rVendedor.setContent(String.valueOf(0) + "," + lot.getType());
+						myAgent.send(rVendedor);
 					}
 
 				} else {
