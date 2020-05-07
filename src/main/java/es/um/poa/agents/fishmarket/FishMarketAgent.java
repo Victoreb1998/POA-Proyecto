@@ -343,6 +343,7 @@ public class FishMarketAgent extends POAAgent {
 						rVendedor.addReceiver(vendedor);
 						rVendedor.setContent(String.valueOf(0) + "," + lot.getType());
 						myAgent.send(rVendedor);
+						getLogger().info("INFO", "Avisando al vendedor de que no se ha vendido el pescado");
 					}
 
 				} else {

@@ -28,10 +28,10 @@ public class SellerAgent extends POAAgent {
 	private static final long serialVersionUID = 1L;
 	// duda precio minimo
 	private List<Lot> catalogue;
-	
+
 	private AID LonjaAgent;
-	private float dinero = 0; 
-	private float acumulado = 0; 
+	private float dinero = 0;
+	private float acumulado = 0;
 
 	public void setup() {
 		super.setup();
@@ -85,32 +85,31 @@ public class SellerAgent extends POAAgent {
 						identificacion.setContent(getName());
 						identificacion.setReplyWith("subscribe" + System.currentTimeMillis());
 						myAgent.send(identificacion);
-						
 
 					}
 				});
-				seq.addSubBehaviour(new DelayBehaviour(this,5000) {
+				seq.addSubBehaviour(new DelayBehaviour(this, 5000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					protected void handleElapsedTimeout() {
-						//recibimos la respuesta
+						// recibimos la respuesta
 						mt = MessageTemplate.MatchConversationId("RegistroCorrecto");
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
-							//si el comprador se ha podido registrar(AGREE) podrá abrir un credito
+							// si el comprador se ha podido registrar(AGREE) podrá abrir un credito
 							if (msg.getPerformative() == ACLMessage.AGREE) {
 								ACLMessage identificacion = new ACLMessage(ACLMessage.REQUEST);
 								identificacion.addReceiver(LonjaAgent);
 								String paraEnviar = "";
-								for (Lot l: catalogue) {
-									paraEnviar += l.paraEnviar()+",";
+								for (Lot l : catalogue) {
+									paraEnviar += l.paraEnviar() + ",";
 								}
 								identificacion.setContent(paraEnviar);
 								identificacion.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 								identificacion.setConversationId("SellerLot");
-								getLogger().info("INFO", "Lot enviado correctamente: "+paraEnviar);
+								getLogger().info("INFO", "Lot enviado correctamente: " + paraEnviar);
 								myAgent.send(identificacion);
 							} else {
 								block();
@@ -119,43 +118,47 @@ public class SellerAgent extends POAAgent {
 					}
 				});
 				seq.addSubBehaviour(new DelayBehaviour(this, 3000));
-				seq.addSubBehaviour(new TickerBehaviour(this,4000) {
-					
+				seq.addSubBehaviour(new TickerBehaviour(this, 4000) {
+
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					protected void onTick() {
-						
+
 						MessageTemplate mt = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
 								ACLMessage.REQUEST, "PescadoVendidoProtocolo");
-						
+
 						ACLMessage msg = myAgent.receive(mt);
 						if (msg != null) {
 							String[] contenidos = msg.getContent().split(",");
 							Float precio = Float.valueOf(contenidos[0]);
-							acumulado+=precio;
+							acumulado += precio;
 							String pescado = contenidos[1];
 							getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
-							//retiramos el dinero con probabilidad 1/2
-							if (Math.random() > 0.5) {
-								
-								ACLMessage rVendedor = new ACLMessage(ACLMessage.AGREE);
-								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-								rVendedor.setConversationId("SacarDineroProtocolo");
-								rVendedor.addReceiver(LonjaAgent);
-			
-								myAgent.send(rVendedor);
-								
-								dinero += acumulado;
-								acumulado=0;
-								getLogger().info("INFO", "El agente " + getName() + " retira el dinero");
-							} else {//no saca el dinero
-								ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);
-								rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-								rVendedor.setConversationId("SacarDineroProtocolo");
-								rVendedor.addReceiver(LonjaAgent);
-								myAgent.send(rVendedor);
-								getLogger().info("INFO", "El agente " + getName() + " NO retira el dinero");
+							// retiramos el dinero con probabilidad 1/2
+							if (precio == 0) {
+								getLogger().info("INFO", "El agente " + getName() + "recibe que no ha vendido el pescado ");
+							} else {
+								if (Math.random() > 0.5) {
+
+									ACLMessage rVendedor = new ACLMessage(ACLMessage.AGREE);
+									rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+									rVendedor.setConversationId("SacarDineroProtocolo");
+									rVendedor.addReceiver(LonjaAgent);
+
+									myAgent.send(rVendedor);
+
+									dinero += acumulado;
+									acumulado = 0;
+									getLogger().info("INFO", "El agente " + getName() + " retira el dinero");
+								} else {// no saca el dinero
+									ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);
+									rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+									rVendedor.setConversationId("SacarDineroProtocolo");
+									rVendedor.addReceiver(LonjaAgent);
+									myAgent.send(rVendedor);
+									getLogger().info("INFO", "El agente " + getName() + " NO retira el dinero");
+								}
 							}
 						}
 					}
