@@ -30,7 +30,8 @@ public class SellerAgent extends POAAgent {
 	private List<Lot> catalogue;
 	
 	private AID LonjaAgent;
-	private int dinero = 0; 
+	private float dinero = 0; 
+	private float acumulado = 0; 
 
 	public void setup() {
 		super.setup();
@@ -132,6 +133,7 @@ public class SellerAgent extends POAAgent {
 						if (msg != null) {
 							String[] contenidos = msg.getContent().split(",");
 							Float precio = Float.valueOf(contenidos[0]);
+							acumulado+=precio;
 							String pescado = contenidos[1];
 							getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
 							//retiramos el dinero con probabilidad 1/2
@@ -144,7 +146,8 @@ public class SellerAgent extends POAAgent {
 			
 								myAgent.send(rVendedor);
 								
-								dinero += precio;
+								dinero += acumulado;
+								acumulado=0;
 								getLogger().info("INFO", "El agente " + getName() + " retira el dinero");
 							} else {//no saca el dinero
 								ACLMessage rVendedor = new ACLMessage(ACLMessage.REFUSE);

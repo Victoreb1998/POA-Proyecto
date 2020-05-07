@@ -218,7 +218,6 @@ public class BuyerAgent extends POAAgent {
 					creditoDisponible -= pagado;
 					getLogger().info("INFO",
 							"Agente: " + myAgent.getName() + "ha sido el ganador, decrementando dinero");
-					// targetFishName.remove(contenidos[1]);
 				}
 				break;
 
