@@ -134,13 +134,13 @@ public class SellerAgent extends POAAgent {
 							Float precio = Float.valueOf(contenidos[0]);
 							acumulado += precio;
 							String pescado = contenidos[1];
-							getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
+	
 							// retiramos el dinero con probabilidad 1/2
 							if (precio == 0) {
 								getLogger().info("INFO", "El agente " + getName() + "recibe que no ha vendido el pescado ");
 							} else {
+								getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
 								if (Math.random() > 0.5) {
-
 									ACLMessage rVendedor = new ACLMessage(ACLMessage.AGREE);
 									rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 									rVendedor.setConversationId("SacarDineroProtocolo");
