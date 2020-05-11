@@ -24,6 +24,12 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+/**
+ * Clase que representa el agente de la Lonja
+ * 
+ * @author victor
+ *
+ */
 public class FishMarketAgent extends POAAgent {
 
 	private static final long serialVersionUID = 1L;
@@ -36,6 +42,11 @@ public class FishMarketAgent extends POAAgent {
 	private float precio = 0;
 	private int flag = 0;
 
+	/**
+	 * Función que se ejecuta automaticamente al iniciarse el agente donde se lee
+	 * los fichero de configuración, se inicializan las variables y se añaden los
+	 * behaviour
+	 */
 	public void setup() {
 		super.setup();
 		Object[] args = getArguments();
@@ -80,6 +91,13 @@ public class FishMarketAgent extends POAAgent {
 		}
 	}
 
+	/**
+	 * Función que lee el fichero dado por parámetro y devuleve la configuración
+	 * inicial de la lonja
+	 * 
+	 * @param fileName
+	 * @return Configuración de la lonja
+	 */
 	private FishMarketAgentConfig initAgentFromConfigFile(String fileName) {
 		FishMarketAgentConfig config = null;
 		try {
@@ -94,6 +112,14 @@ public class FishMarketAgent extends POAAgent {
 		return config;
 	}
 
+	/**
+	 * Función auxiliar para genererar MessageTemplate
+	 * 
+	 * @param protocolo
+	 * @param mensaje
+	 * @param conversacion
+	 * @return
+	 */
 	public static MessageTemplate crearPlantilla(String protocolo, int mensaje, String conversacion) {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo),
 				MessageTemplate.MatchPerformative(mensaje));
@@ -102,6 +128,15 @@ public class FishMarketAgent extends POAAgent {
 		return templateAddBuyerProtocol;
 	}
 
+	/**
+	 * Función auxiliar para generar MessageTemplate que esperan dos tipos
+	 * 
+	 * @param protocolo
+	 * @param mensaje1
+	 * @param mensaje2
+	 * @param conversacion
+	 * @return
+	 */
 	public MessageTemplate crearPlantilla(String protocolo, int mensaje1, int mensaje2, String conversacion) {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(protocolo), MessageTemplate
 				.or(MessageTemplate.MatchPerformative(mensaje1), MessageTemplate.MatchPerformative(mensaje2)));
@@ -110,6 +145,14 @@ public class FishMarketAgent extends POAAgent {
 		return templateAddBuyerProtocol;
 	}
 
+	/**
+	 * Comportamiento que se encarga de recibir un mensaje de registro del
+	 * comprador, registrarlo en la base de datos si cumple las condiciones y
+	 * contestar al comprador
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class DescubrirComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
@@ -117,11 +160,7 @@ public class FishMarketAgent extends POAAgent {
 		public void action() {
 			MessageTemplate mt = crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
 					"AddBuyerProtocol");
-			/*
-			 * Recibe un mensaje de ACL que coincide con una plantilla determinada. Este
-			 * método no bloquea y devuelve el primer mensaje coincidente en la cola, si lo
-			 * hay.
-			 */
+
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				getLogger().info("INFO",
@@ -148,6 +187,13 @@ public class FishMarketAgent extends POAAgent {
 
 	}
 
+	/**
+	 * Comportamiento que se encarga de recibir un mensaje de registro del vendedor,
+	 * registrarlo en la lonja si no esta ya y contestarle
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class DescubrirVendedor extends CyclicBehaviour {
 
 		private static final long serialVersionUID = 1L;
@@ -190,6 +236,13 @@ public class FishMarketAgent extends POAAgent {
 
 	}
 
+	/**
+	 * Comportamiento que se encarga de recibir el lot del vendedor, registrarlo en
+	 * la lonja y notificar al vendedor de que lo ha recibido
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class RecibirLot extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
@@ -249,6 +302,14 @@ public class FishMarketAgent extends POAAgent {
 		}
 	}
 
+	/**
+	 * Comportamiento que se encarga de comprobar si el comprador esta registrado y
+	 * si el dinero que quiere ingresar es mayor a la variable "dineroMinimo" para
+	 * ser considerado serio
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class ComprobarComprador extends CyclicBehaviour {
 		private static final long serialVersionUID = 1L;
 
@@ -290,7 +351,23 @@ public class FishMarketAgent extends POAAgent {
 
 	}
 
+	/**
+	 * Comportamiento que se encarga de iniciar la subasta para cada producto
+	 * registrado en la lonja, avisar a los compradores de las subastas, ir
+	 * decrementando el precio del prodcuto si nadie puja, recibir las pujas de los
+	 * compradores y notificarles si han ganado, notificar a los vendedores si han
+	 * vendido su producto e ingresarles el dinero si quieren sacarlo
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class Subasta extends TickerBehaviour {
+
+		/**
+		 * 
+		 * @param a      Agente de la lonja
+		 * @param period Tiempo que va a esperar la lonja para que los compradores pujen
+		 */
 		public Subasta(Agent a, long period) {
 			super(a, period);
 
@@ -377,8 +454,7 @@ public class FishMarketAgent extends POAAgent {
 					ganancia += dineroVendedores.get(vendedor);
 					dineroVendedores.put(vendedor, ganancia);
 
-					//notificar al vendedor
-					
+					// notificar al vendedor
 
 					ACLMessage rVendedor = new ACLMessage(ACLMessage.REQUEST);
 					rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
@@ -411,7 +487,7 @@ public class FishMarketAgent extends POAAgent {
 					if (protocolo == ACLMessage.AGREE) {
 						float dinero = dineroVendedores.get(vendedor);
 						dineroVendedores.put(vendedor, new Float(0));
-						getLogger().info("INFO", "INFO, el vendedor saca " + dinero+dineroPescador);
+						getLogger().info("INFO", "INFO, el vendedor saca " + dinero + dineroPescador);
 					} else {
 						float dinero = dineroVendedores.get(vendedor);
 						dineroVendedores.put(vendedor, dinero + dineroPescador);

@@ -23,6 +23,12 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+/**
+ * Clase que representa al agente vendedor en la lonja
+ * 
+ * @author victor
+ *
+ */
 public class SellerAgent extends POAAgent {
 
 	private static final long serialVersionUID = 1L;
@@ -33,6 +39,10 @@ public class SellerAgent extends POAAgent {
 	private float dinero = 0;
 	private float acumulado = 0;
 
+	/**
+	 * Metodo que se ejecuta automaticamente cuando arranca el agente y se encarga
+	 * de inicializar las variables del agente y añadir los comportamientos
+	 */
 	public void setup() {
 		super.setup();
 
@@ -48,6 +58,10 @@ public class SellerAgent extends POAAgent {
 				SequentialBehaviour seq = new SequentialBehaviour();
 				// No podemos dejar que el vendedor busque a la lonja antes de que esta este
 				// registrada
+				/**
+				 * Comportamiento que para esperar a que la lonja este registrada en el
+				 * directorio
+				 */
 				seq.addSubBehaviour(new DelayBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
@@ -68,6 +82,9 @@ public class SellerAgent extends POAAgent {
 
 					}
 				});
+				/**
+				 * Comportamiento para mandar una peticion de registro a la lonja
+				 */
 				seq.addSubBehaviour(new OneShotBehaviour() {
 
 					private static final long serialVersionUID = 1L;
@@ -88,6 +105,9 @@ public class SellerAgent extends POAAgent {
 
 					}
 				});
+				/**
+				 * Comportamiento con el que le enviamos a la lonja todos los lotes del vendedor
+				 */
 				seq.addSubBehaviour(new DelayBehaviour(this, 5000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
@@ -118,6 +138,11 @@ public class SellerAgent extends POAAgent {
 					}
 				});
 				seq.addSubBehaviour(new DelayBehaviour(this, 3000));
+				/**
+				 * Comportamiento de la subasta que el vendedor intentara recibir un mensaje de
+				 * la lonja cada 4 segundos para ver si le ha vendido algun producto y procedr a
+				 * retirar el dinero o no
+				 */
 				seq.addSubBehaviour(new TickerBehaviour(this, 4000) {
 
 					private static final long serialVersionUID = 1L;
@@ -134,12 +159,14 @@ public class SellerAgent extends POAAgent {
 							Float precio = Float.valueOf(contenidos[0]);
 							acumulado += precio;
 							String pescado = contenidos[1];
-	
+
 							// retiramos el dinero con probabilidad 1/2
 							if (precio == 0) {
-								getLogger().info("INFO", "El agente " + getName() + "recibe que no ha vendido el pescado ");
+								getLogger().info("INFO",
+										"El agente " + getName() + "recibe que no ha vendido el pescado ");
 							} else {
-								getLogger().info("INFO", "El agente " + getName() + " ha recibido la venta de " + pescado);
+								getLogger().info("INFO",
+										"El agente " + getName() + " ha recibido la venta de " + pescado);
 								if (Math.random() > 0.5) {
 									ACLMessage rVendedor = new ACLMessage(ACLMessage.AGREE);
 									rVendedor.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
@@ -173,6 +200,13 @@ public class SellerAgent extends POAAgent {
 		}
 	}
 
+	/**
+	 * Función que lee un fichero y devuelvo la configuración inicial del agente
+	 * vendedor
+	 * 
+	 * @param fileName Fichero donde esta la configuración
+	 * @return config Configuración inicial del vendedor
+	 */
 	private SellerAgentConfig initAgentFromConfigFile(String fileName) {
 		SellerAgentConfig config = null;
 		try {

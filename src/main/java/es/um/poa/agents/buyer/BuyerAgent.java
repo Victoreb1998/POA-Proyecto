@@ -21,6 +21,12 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+/**
+ * Clase que representa al agente comprador en la lonja
+ * 
+ * @author victor
+ *
+ */
 public class BuyerAgent extends POAAgent {
 
 	private static final long serialVersionUID = 1L;
@@ -32,6 +38,10 @@ public class BuyerAgent extends POAAgent {
 	private AID LonjaAgent;
 	private int ganador = 0;
 
+	/**
+	 * Metodo que se ejecuta automaticamente cuando arranca el agente y se encarga
+	 * de inicializar las variables del agente y añadir los comportamientos
+	 */
 	public void setup() {
 		super.setup();
 		Object[] args = getArguments();
@@ -50,6 +60,10 @@ public class BuyerAgent extends POAAgent {
 				SequentialBehaviour seq = new SequentialBehaviour();
 				// No podemos dejar que el comprador busque a la lonja antes de que esta este
 				// registrada
+				/**
+				 * Comportamiento que para esperar a que la lonja este registrada en el
+				 * directorio
+				 */
 				seq.addSubBehaviour(new DelayBehaviour(this, 10000) {
 
 					private static final long serialVersionUID = 1L;
@@ -70,7 +84,9 @@ public class BuyerAgent extends POAAgent {
 
 					}
 				});
-				// protocolo de inicio para registrar a un comprador
+				/**
+				 * Comportamiento para enviarle una petición de registro a la lonja
+				 */
 				seq.addSubBehaviour(new OneShotBehaviour() {
 
 					private static final long serialVersionUID = 1L;
@@ -95,6 +111,10 @@ public class BuyerAgent extends POAAgent {
 				// que se haya registrado el usuario, si no le ponemos aun que sea unas
 				// milesimas de tiempo de separacion recibira
 				// un mensaje nulo
+				/**
+				 * Comportamiento que recibe la respuesta del registro de la lonja y le contesta
+				 * con el credito que quiere abrir en la lonja
+				 */
 				seq.addSubBehaviour(new DelayBehaviour(this, 5000) {
 					private MessageTemplate mt;
 					private static final long serialVersionUID = 1L;
@@ -120,6 +140,10 @@ public class BuyerAgent extends POAAgent {
 						}
 					}
 				});
+				/**
+				 * Comportamiento que recibe la respuesta de si el credito que hemos querido
+				 * abrir es suficiente
+				 */
 				seq.addSubBehaviour(new DelayBehaviour(this, 3000) {
 
 					private static final long serialVersionUID = 1L;
@@ -157,6 +181,13 @@ public class BuyerAgent extends POAAgent {
 		}
 	}
 
+	/**
+	 * Función que lee un fichero y devuelvo la configuración inicial del agente
+	 * vendedor
+	 * 
+	 * @param fileName Fichero donde esta la configuración
+	 * @return config Configuración inicial del vendedor
+	 */
 	private BuyerAgentConfig initAgentFromConfigFile(String fileName) {
 		BuyerAgentConfig config = null;
 		try {
@@ -171,6 +202,14 @@ public class BuyerAgent extends POAAgent {
 		return config;
 	}
 
+	/**
+	 * Clase que implementa el comportamiento de la subasta del comprador, recibe
+	 * las pujas y con una probabilidad del 50% y si tiene dinero realiza la puja y
+	 * espera un mensaje para ver si ha ganado la puja
+	 * 
+	 * @author victor
+	 *
+	 */
 	private class DecidirPuja extends TickerBehaviour {
 
 		public DecidirPuja(Agent a, long period) {
@@ -194,7 +233,7 @@ public class BuyerAgent extends POAAgent {
 					// if (targetFishName.contains(contenidos[1])) {
 					double precio = Double.valueOf(contenidos[2]);
 					if (precio <= creditoDisponible && Math.random() > 0.5) {
-						ganador=1;
+						ganador = 1;
 						getLogger().info("INFO",
 								"Agente: " + myAgent.getName() + " intentado pujar por " + contenidos[1]);
 						ACLMessage respuesta = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
@@ -208,9 +247,8 @@ public class BuyerAgent extends POAAgent {
 				}
 				break;
 			case 1:
-				MessageTemplate plantilla = FishMarketAgent.crearPlantilla(
-						FIPANames.InteractionProtocol.FIPA_REQUEST, ACLMessage.REQUEST,
-						"OfertaAceptadaProtocolo");
+				MessageTemplate plantilla = FishMarketAgent.crearPlantilla(FIPANames.InteractionProtocol.FIPA_REQUEST,
+						ACLMessage.REQUEST, "OfertaAceptadaProtocolo");
 				ACLMessage msgaux = myAgent.receive(plantilla);
 				ganador = 0;
 				if (msgaux != null) {
